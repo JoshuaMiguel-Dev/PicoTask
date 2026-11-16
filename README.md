@@ -1,78 +1,89 @@
-# PICO TASK — Tactile Pixel Desk Companion (PWA)
+# <img src="./public/icon.svg" width="28" height="28" alt="PicoTask Cat Icon" /> PicoTask
 
-A mobile-first, offline-capable Progressive Web App (PWA) built with a deliberate **PICO-8 8-bit hardware aesthetic**. Designed as a daily student desk companion combining deadline task management, an interactive month calendar, a split-flap focus timer & desk clock, an adoptable streak cat companion, and personal finance tracking in Philippine Pesos (`₱`).
+**Live Demo:** **[https://picotask.vercel.app](https://picotask.vercel.app)**
 
----
-
-## Design Direction
-
-- **Tone:** Tactile 8-bit Hardware & Utilitarian Planner (inspired by PICO-8 & classic Braun desk clocks)
-- **Color Palette (Official PICO-8 Hex Values):**
-  - Cream `#FFF1E8` (Primary paper background)
-  - Peach `#FFCCAA` (Recessed panels & header/navigation surfaces)
-  - Dark Navy `#1D2B53` (Typography, 2–4px structural borders, hard offset shadows — 11.9:1 AAA contrast)
-  - Red-Pink `#FF004D` (Primary actions, active tabs, overdue alerts)
-  - Blue `#29ADFF` (Selected calendar dates, focus rings, secondary badges)
-  - Dark Green `#008751` (Completed tasks, income, active timer state)
-  - Orange `#FFA300` (Due-soon warnings within 24h, paused states)
-  - Gray `#5F574F` (Muted metadata — 6.4:1 AA contrast)
-- **Typography:** `'Press Start 2P'` for compact hardware headers & split-flap numerals; `'Pixelify Sans'` (`16px` base) for high-legibility body copy and mobile form inputs.
-- **Memorable Detail:** Mechanical split-flap digit housings with a 4-step frame animation (`steps(4, end)`) and a full-screen horizontal desk mode (`createPortal` + Fullscreen API + `90°` portrait-lock rotation helper).
+**PicoTask** is an offline-first Progressive Web App (PWA) built as a personal student desk companion. It combines deadline task tracking, a monthly schedule planner, a mechanical split-flap focus timer & desk clock, an interactive pixel streak cat, and a lightweight Philippine Peso (`₱`) expense tracker inside a cohesive **PICO-8 8-bit console interface**.
 
 ---
 
-## Features by Phase
+## Try the Demo
 
-### Phase 1: MVP
-1. **Task Ledger ([src/pages/TasksPage.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/pages/TasksPage.tsx))**
-   - Full CRUD (Add, Edit, Delete, Toggle Complete) persisted locally in **IndexedDB** via **Dexie.js**.
-   - Automatic chronological sorting by deadline (active tasks first, earliest deadline at the top).
-   - Urgency classification (`OVERDUE`, `DUE SOON` < 24h, `SCHEDULED`, `DONE`) with color-coded left hardware strips.
-2. **Monthly Calendar ([src/pages/CalendarPage.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/pages/CalendarPage.tsx))**
-   - 7-column responsive month grid generated via `date-fns` (`eachDayOfInterval`).
-   - Color-coded task count badges on each day cell; tap any date to inspect, complete, edit, or add tasks directly on that day.
-3. **Calm Split-Flap Desk Clock & Focus Timer ([src/pages/ClockPage.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/pages/ClockPage.tsx))**
-   - **Desk Clock Mode:** Clean, distraction-free `HH:MM:SS` split-flap display with `12H / 24H` toggle.
-   - **Focus Timer Mode:** Stopwatch and Pomodoro presets (`15m`, `25m`, `45m`) using **Progressive Disclosure** (the session title & save prompt only appears when you pause a session with time on the clock, and saved history is tucked into a collapsible drawer).
-   - **Full-Screen Horizontal Mode:** Edge-to-edge landscape view (`[Full Screen]`) with oversized split-flap tiles and a mobile `[Rotate 90°]` toggle.
-4. **Live In-App Deadline Reminder Banner ([src/components/DeadlineBanner.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/components/DeadlineBanner.tsx))**
-   - Highlights overdue and due-soon tasks across all tabs with signature-based dismissal.
-5. **Installable Offline-First PWA ([vite.config.ts](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/vite.config.ts))**
-   - Web App Manifest (`manifest.webmanifest`), custom pixel icons (`192x192`, `512x512`, `apple-touch-icon`), and Workbox Service Worker caching all static assets and Google Fonts.
+Open **[picotask.vercel.app](https://picotask.vercel.app)** on your phone or desktop browser:
 
-### Phase 2: Streak Pet Companion
-- **Custom SVG Pixel Cat ([src/components/PixelCat.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/components/PixelCat.tsx)):** Original 8-bit SVG cat drawn on a 24×20 pixel grid with 4 moods (`happy`, `neutral`, `sleepy`, `sad`) driven by your daily task completion streak.
-- **Adopt & Name Your Cat ([src/components/StreakPetCard.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/components/StreakPetCard.tsx)):** Prompts you to name your cat on first launch (with a `[Rename]` button anytime later) and reacts when you tap to pet it.
-
-### Phase 3: Minimal Finance Tracker (`₱`)
-- **Income & Expense Ledger ([src/pages/FinancePage.tsx](file:///c:/Users/Joshua/Desktop/Projects/Project_ToDoTask/src/pages/FinancePage.tsx)):** Track income and expenses in Philippine Pesos (`₱`) with categories (`Food`, `Transport`, `School`, `Tech`, `Fun`, `Allowance`, `Part-Time`, `Other`).
-- **Monthly Summary & Category Bar Chart:** Live Net Balance, Monthly Income, Monthly Spend, and a PICO-8 styled `Recharts` category bar chart.
+- **Install on Android (Chrome):** Tap **`+ Install`** in the top header (or open the Chrome `⋮` menu $\rightarrow$ **Install app**).
+- **Install on iPhone (Safari):** Tap **Share** $\rightarrow$ **Add to Home Screen**.
+- **Works 100% Offline:** All tasks, focus sessions, streaks, and finance entries are stored locally on your device using **IndexedDB**, and static assets are cached by a **Service Worker**.
 
 ---
 
-## Keyboard Shortcuts & Accessibility
+## Core Modules
 
-- `Tab` / `Shift + Tab`: Navigate interactive controls with high-contrast dashed `#29ADFF` focus rings (`3px dashed`).
-- `Alt + 1`: Switch to **Tasks** tab.
-- `Alt + 2`: Switch to **Calendar** tab.
-- `Alt + 3`: Switch to **Clock / Focus Timer** tab.
-- `Alt + 4`: Switch to **Cash (Finance)** tab.
-- `Escape`: Exit Full-Screen Horizontal Timer/Clock mode.
+### 1. `[Tasks]` — Deadline Ledger & Streak Cat Companion
+- **Deadline Sorting & Urgency Badges:** Tasks automatically sort by earliest deadline and highlight as `OVERDUE`, `DUE SOON` (< 24h), `SCHEDULED`, or `DONE`.
+- **Custom Pixel Date & Time Modal:** Pick dates, hours (`01–12`), and minutes (`:00–:59`) or use 1-tap presets (`Today 6PM`, `Tonight 11:59PM`, `Tmrw 9AM`).
+- **Interactive Streak Cat:** Complete at least 1 task a day to build your streak and keep your gray tabby companion happy across 4 moods (`HAPPY`, `ALERT`, `SLEEPY`, `SAD`). Tap `[Pet]` for a headpat bounce—or tap 5 times in a row for a 360° backflip easter egg.
+
+### 2. `[Cal]` — Monthly Calendar & Time-Slot Planner
+- **7-Column Month Grid:** Color-coded task count badges on every date cell indicating overdue, due-soon, scheduled, or completed days.
+- **Tear-Off Day Agenda & Quick Scheduler:** Tap any date to inspect its timeline, tag tasks (`[EXAM]`, `[PROJECT]`, `[LAB]`, `[HW]`, `[MEET]`), and lock in a deadline time slot in one tap.
+
+### 3. `[Clock]` — Split-Flap Desk Clock & Focus Timer
+- **Mechanical Split-Flap Display:** Frame-stepped `HRS : MIN : SEC` flip cards with `12H / 24H` toggle.
+- **Focus Timer & Session Logger:** Run a count-up stopwatch, Pomodoro presets (`15m`, `25m`, `45m`), or a custom `MIN : SEC` countdown, then save completed study blocks to your session log.
+- **Web Audio 8-Bit Alarms:** Synthesizes `Chiptune`, `Watch Beep`, and `Fanfare` 5-second completion alarms directly in the browser using the Web Audio API (zero external audio files).
+- **Full-Screen Horizontal Desk Mode:** Tap `[Full Screen]` (with a mobile `[Rotate 90°]` option) to turn your phone into a landscape desk clock.
+
+### 4. `[Cash]` — Peso (`₱`) Finance Tracker
+- **Income & Expense Log:** Track allowance, part-time income, and daily student expenses (`Food`, `Transport`, `School`, `Tech`, `Fun`, `Other`) with a custom 8-bit pixel Peso (`₱`) glyph.
+- **Monthly Category Chart:** Visualizes current-month spending by category using `Recharts`.
 
 ---
 
-## Local Development & Production PWA Test
+## Tech Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Framework & Language** | React 19 + TypeScript + Vite |
+| **Styling & Design System** | Tailwind CSS v4 (Custom PICO-8 palette, hard pixel shadows, locked console viewport) |
+| **Local Database** | Dexie.js (`IndexedDB` wrapper with reactive `useLiveQuery` hooks) |
+| **PWA & Offline Support** | `vite-plugin-pwa` + Workbox (`generateSW`, runtime font caching, auto-update) |
+| **Date & Charts** | `date-fns` + `Recharts` |
+| **Audio Synthesis** | Browser Web Audio API (`AudioContext` square & triangle wave oscillators) |
+
+---
+
+## Project Structure
+
+```text
+├── public/                  # Pixelated gray cat PWA icons (SVG, 192x192, 512x512, Apple Touch)
+├── src/
+│   ├── components/          # PixelCat, StreakPetCard, FlipDigitCard, PixelDateTimePicker, TaskForm
+│   ├── db/                  # Dexie IndexedDB schema (tasks, sessions, transactions)
+│   ├── hooks/               # Custom React hooks (useClock)
+│   ├── pages/               # Main views (TasksPage, CalendarPage, ClockPage, FinancePage)
+│   ├── types/               # Strict TypeScript interfaces
+│   ├── utils/               # Date, streak calculation, Web Audio synth, and OS notification helpers
+│   ├── App.tsx              # Locked console shell & navigation
+│   └── index.css            # PICO-8 design tokens & keyframe animations
+└── vite.config.ts           # Vite & PWA manifest/service-worker configuration
+```
+
+---
+
+## Run Locally
 
 ```bash
-# 1. Install dependencies
+# 1. Clone the repository
+git clone https://github.com/JoshuaMiguel-Dev/PicoTask.git
+cd PicoTask
+
+# 2. Install dependencies
 npm install
 
-# 2. Start Vite dev server (http://localhost:5173)
+# 3. Start the development server (http://localhost:5173)
 npm run dev
 
-# 3. Build production bundle & Service Worker
+# 4. Build and preview production PWA
 npm run build
-
-# 4. Preview production PWA locally
 npm run preview
 ```
