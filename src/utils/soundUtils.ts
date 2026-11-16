@@ -109,7 +109,7 @@ export function playTimerAlarm(
     for (let c = 0; c < cycles; c++) {
       let offset = c * 1.0;
       notes.forEach((freq, idx) => {
-        playTone(ctx, freq, now + offset, lengths[idx], 'square', 0.38);
+        playTone(ctx, freq, now + offset, lengths[idx], 'square', 0.24);
         offset += lengths[idx] + 0.02;
       });
     }
@@ -118,8 +118,8 @@ export function playTimerAlarm(
     const beepGroups = mode === 'alarm' ? 10 : 2;
     for (let i = 0; i < beepGroups; i++) {
       const groupStart = now + i * 0.5;
-      playTone(ctx, 2093.0, groupStart, 0.08, 'square', 0.35); // C7
-      playTone(ctx, 2093.0, groupStart + 0.12, 0.08, 'square', 0.35);
+      playTone(ctx, 2093.0, groupStart, 0.08, 'square', 0.24); // C7
+      playTone(ctx, 2093.0, groupStart + 0.12, 0.08, 'square', 0.24);
     }
   } else if (preset === 'fanfare') {
     // Arcade Quest Complete fanfare: ~1.0s per cycle -> 5 cycles = 5.0 seconds
@@ -134,8 +134,8 @@ export function playTimerAlarm(
           freq,
           now + cycleStart + times[idx],
           durations[idx],
-          'triangle',
-          0.55,
+          'square',
+          0.24,
         );
       });
     }
