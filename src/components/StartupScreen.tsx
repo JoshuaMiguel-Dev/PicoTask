@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import PixelCat from './PixelCat';
 
 const ONBOARDED_KEY = 'pico_onboarded_v1';
@@ -12,12 +12,21 @@ interface StartupScreenProps {
  * Handles two distinct startup experiences before entering the main app:
  * 1. First-Time Users (`!pico_onboarded_v1`):
  *    Full PICO-8 Cartridge Title Screen & Startup Menu where the user names their
- *    streak cat companion and presses `[START GAME // LAUNCH]`.
+ *    streak cat companion and presses `[Press Start]`.
  * 2. Returning Users (`pico_onboarded_v1 === 'true'`):
  *    Crisp 8-bit Console Boot / Loading Screen with a segmented pixel progress bar
  *    and their companion cat before entering the workspace.
+ *
+ * Interview Note (Referential Equality in React `useEffect`):
+ * Because the parent `<App />` ticks every 1000ms via `useClock()`, passing an inline
+ * `onFinish={() => ...}` prop creates a new function reference every 1000ms.
+ * Storing `onFinish` in a `useRef` (`onFinishRef`) prevents the 1000ms parent re-render
+ * from resetting our boot timer before it finishes!
  */
 export default function StartupScreen({ onFinish }: StartupScreenProps) {
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
+
   const [isReturningUser] = useState<boolean>(() => {
     return Boolean(
       localStorage.getItem(ONBOARDED_KEY) ||
@@ -29,7 +38,6 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
     return localStorage.getItem(CAT_NAME_STORAGE_KEY) || '';
   });
 
-  // Boot progress (0 -> 100) for returning users (or after pressing Start)
   const [isBooting, setIsBooting] = useState<boolean>(isReturningUser);
   const [bootStep, setBootStep] = useState<number>(0);
 
@@ -44,17 +52,17 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
         }
         return prev + 1;
       });
-    }, 260);
+    }, 220);
 
     const finishTimer = window.setTimeout(() => {
-      onFinish();
-    }, 1350);
+      onFinishRef.current();
+    }, 1050);
 
     return () => {
       window.clearInterval(stepInterval);
       window.clearTimeout(finishTimer);
     };
-  }, [isBooting, onFinish]);
+  }, [isBooting]);
 
   function handleStartFirstTime(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
