@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pico-cream: #FFF1E8;
+  --color-pico-navy: #1D2B53;
+  --color-pico-red: #FF004D;
+  --color-pico-blue: #29ADFF;
+  --color-pico-green: #008751;
+  --color-pico-orange: #FFA300;
+  --color-pico-gray: #5F574F;
+  --color-pico-peach: #FFCCAA;
+
+  --font-pixel-body: "Pixelify Sans", monospace;
+  --font-pixel-heading: "Press Start 2P", monospace;
+}
+
+@layer base {
+  * {
+    border-radius: 0px !important;
+  }
+
+  body {
+    font-family: var(--font-pixel-body);
+    background-color: var(--color-pico-cream);
+    color: var(--color-pico-navy);
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  svg,
+  img {
+    image-rendering: pixelated;
+  }
+}
+
+/* Custom Pixel Hardware Utilities */
+.font-heading {
+  font-family: var(--font-pixel-heading);
+}
+
+.font-body {
+  font-family: var(--font-pixel-body);
+}
+
+.pixel-card {
+  background-color: var(--color-pico-cream);
+  border: 3px solid var(--color-pico-navy);
+  box-shadow: 4px 4px 0px var(--color-pico-navy);
+}
+
+.pixel-card-peach {
+  background-color: var(--color-pico-peach);
+  border: 3px solid var(--color-pico-navy);
+  box-shadow: 4px 4px 0px var(--color-pico-navy);
+}
+
+.pixel-btn {
+  border: 2px solid var(--color-pico-navy);
+  box-shadow: 3px 3px 0px var(--color-pico-navy);
+  transition: transform 75ms ease, box-shadow 75ms ease;
+  cursor: pointer;
+}
+
+.pixel-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--color-pico-navy);
+}
+
+.pixel-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px var(--color-pico-navy);
+}
+
+.pixel-btn:focus-visible,
+.pixel-input:focus-visible {
+  outline: 3px dashed var(--color-pico-blue);
+  outline-offset: 2px;
+}
+
+.pixel-input {
+  background-color: #FFFFFF;
+  border: 2px solid var(--color-pico-navy);
+  box-shadow: inset 2px 2px 0px rgba(29, 43, 83, 0.15);
+}
+
+/* Split-Flap Mechanical Clock Animation */
+@keyframes flap-drop {
+  0% {
+    transform: perspective(300px) rotateX(-75deg);
+    opacity: 0.4;
+  }
+  100% {
+    transform: perspective(300px) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-flap {
+  animation: flap-drop 180ms steps(4, end) forwards;
+  transform-origin: center center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flap {
+    animation: none;
+  }
+}

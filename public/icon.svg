@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- Outer Navy Border -->
+  <rect width="16" height="16" fill="#1D2B53" />
+  <!-- Inner Cream Face -->
+  <rect x="1" y="1" width="14" height="14" fill="#FFF1E8" />
+  <!-- Top Peach Header Strip -->
+  <rect x="1" y="1" width="14" height="4" fill="#FFCCAA" />
+  <!-- Header Divider Line -->
+  <rect x="1" y="5" width="14" height="1" fill="#1D2B53" />
+  <!-- Red-Pink LED Indicator in Header -->
+  <rect x="2" y="2" width="2" height="2" fill="#FF004D" />
+  <!-- Blue Accent Bar in Header -->
+  <rect x="11" y="2" width="3" height="2" fill="#29ADFF" />
+  <!-- Green Checkmark Pixel Art in Body -->
+  <rect x="10" y="7" width="2" height="2" fill="#008751" />
+  <rect x="8" y="9" width="2" height="2" fill="#008751" />
+  <rect x="6" y="11" width="2" height="2" fill="#008751" />
+  <rect x="4" y="9" width="2" height="2" fill="#008751" />
+</svg>
