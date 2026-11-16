@@ -51,7 +51,7 @@ function playTone(
   startTime: number,
   duration: number,
   type: OscillatorType = 'square',
-  volume = 0.12,
+  volume = 0.35,
 ) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -59,7 +59,9 @@ function playTone(
   osc.type = type;
   osc.frequency.setValueAtTime(freq, startTime);
 
+  // Sustain full volume for 80% of the note so it cuts through phone speakers clearly
   gain.gain.setValueAtTime(volume, startTime);
+  gain.gain.setValueAtTime(volume, startTime + duration * 0.8);
   gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
   osc.connect(gain);
@@ -79,7 +81,7 @@ export function playUiBlip(preset: TimerSoundPreset): void {
   if (!ctx) return;
 
   const now = ctx.currentTime;
-  playTone(ctx, 587.33, now, 0.06, 'square', 0.08); // D5
+  playTone(ctx, 587.33, now, 0.06, 'square', 0.22); // D5
 }
 
 /**
@@ -107,17 +109,17 @@ export function playTimerAlarm(
     for (let c = 0; c < cycles; c++) {
       let offset = c * 1.0;
       notes.forEach((freq, idx) => {
-        playTone(ctx, freq, now + offset, lengths[idx], 'square', 0.14);
+        playTone(ctx, freq, now + offset, lengths[idx], 'square', 0.38);
         offset += lengths[idx] + 0.02;
       });
     }
   } else if (preset === 'beep') {
-    // Classic digital watch double-beep: 1 group per second for 5 seconds (or 2 groups for preview)
+    // Classic digital watch double-beep: 10 groups for 5 seconds (or 2 groups for preview)
     const beepGroups = mode === 'alarm' ? 10 : 2;
     for (let i = 0; i < beepGroups; i++) {
       const groupStart = now + i * 0.5;
-      playTone(ctx, 2093.0, groupStart, 0.08, 'square', 0.12); // C7
-      playTone(ctx, 2093.0, groupStart + 0.12, 0.08, 'square', 0.12);
+      playTone(ctx, 2093.0, groupStart, 0.08, 'square', 0.35); // C7
+      playTone(ctx, 2093.0, groupStart + 0.12, 0.08, 'square', 0.35);
     }
   } else if (preset === 'fanfare') {
     // Arcade Quest Complete fanfare: ~1.0s per cycle -> 5 cycles = 5.0 seconds
@@ -133,7 +135,7 @@ export function playTimerAlarm(
           now + cycleStart + times[idx],
           durations[idx],
           'triangle',
-          0.22,
+          0.55,
         );
       });
     }
