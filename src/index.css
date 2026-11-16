@@ -19,6 +19,13 @@
     border-radius: 0px !important;
   }
 
+  html,
+  body,
+  #root {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   body {
     font-family: var(--font-pixel-body);
     background-color: var(--color-pico-cream);
@@ -27,7 +34,7 @@
     line-height: 1.5;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overscroll-behavior: none;
   }
 
   svg,
@@ -84,6 +91,26 @@
   background-color: #FFFFFF;
   border: 2px solid var(--color-pico-navy);
   box-shadow: inset 2px 2px 0px rgba(29, 43, 83, 0.15);
+}
+
+/* Custom PICO-8 Internal Scrollbar for the Console Viewport */
+.pico-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-pico-navy) var(--color-pico-peach);
+}
+
+.pico-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pico-scroll::-webkit-scrollbar-track {
+  background: var(--color-pico-peach);
+  border-left: 2px solid var(--color-pico-navy);
+}
+
+.pico-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-pico-navy);
+  border: 1px solid var(--color-pico-cream);
 }
 
 /* Split-Flap Mechanical Clock Animation */

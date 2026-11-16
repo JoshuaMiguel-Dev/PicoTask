@@ -45,11 +45,15 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-dvh bg-pico-navy/10 flex justify-center">
-      {/* Framed PICO-8 Console Shell with Left & Right Structural Borders */}
-      <div className="animate-app-reveal min-h-dvh w-full max-w-3xl flex flex-col bg-pico-cream text-pico-navy border-x-4 border-t-4 border-pico-navy relative">
-        {/* Top PICO-8 Hardware Console Header */}
-        <header className="border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
+    <div className="h-dvh w-screen overflow-hidden bg-pico-navy/10 flex justify-center">
+      {/*
+        Fixed-Frame PICO-8 Console Shell (`h-dvh overflow-hidden flex flex-col`):
+        - Top `<header>` and Bottom `<nav>` are locked (`shrink-0`) so they never move or bounce.
+        - Inner `<main>` has its own dedicated internal scrollbar (`overflow-y-auto pico-scroll`).
+      */}
+      <div className="animate-app-reveal h-dvh w-full max-w-3xl flex flex-col overflow-hidden bg-pico-cream text-pico-navy border-4 border-pico-navy">
+        {/* Locked Top PICO-8 Hardware Console Header */}
+        <header className="shrink-0 border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <img
@@ -78,18 +82,20 @@ export default function App() {
           </div>
         </header>
 
-        {/* Global In-App Deadline Reminder Banner */}
-        <DeadlineBanner
-          now={now}
-          onViewTasks={() => setActiveTab('tasks')}
-        />
+        {/* Global In-App Deadline Reminder Banner (Locked below header when active) */}
+        <div className="shrink-0">
+          <DeadlineBanner
+            now={now}
+            onViewTasks={() => setActiveTab('tasks')}
+          />
+        </div>
 
-        {/* Main Content Area */}
+        {/* Dedicated Internal Scrollable Viewport (`overflow-y-auto overscroll-contain`) */}
         <main
           key={activeTab}
           id="main-content"
           tabIndex={-1}
-          className="animate-app-reveal flex-1 w-full px-3 sm:px-4 py-4 pb-24 focus:outline-none"
+          className="pico-scroll animate-app-reveal flex-1 min-h-0 w-full overflow-y-auto overscroll-contain px-3 sm:px-4 py-4 focus:outline-none"
         >
           {activeTab === 'tasks' && <TasksPage />}
           {activeTab === 'calendar' && <CalendarPage />}
@@ -97,10 +103,10 @@ export default function App() {
           {activeTab === 'finance' && <FinancePage />}
         </main>
 
-        {/* Mobile-First Bottom Navigation Bar (Framed within the Left & Right Console Borders) */}
+        {/* Locked Bottom Navigation Bar (Part of the console frame, never shifts) */}
         <nav
           aria-label="Primary Bottom Navigation"
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl bg-pico-peach border-t-4 border-x-4 border-b-4 border-pico-navy z-20"
+          className="shrink-0 w-full bg-pico-peach border-t-4 border-pico-navy z-20"
         >
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2 p-2">
             <button

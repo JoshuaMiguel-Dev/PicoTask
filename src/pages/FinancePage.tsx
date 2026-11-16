@@ -17,6 +17,7 @@ import {
   type FinanceCategory,
   type TransactionType,
 } from '../types/finance';
+import PixelDateTimePicker from '../components/PixelDateTimePicker';
 
 // Official PICO-8 colors mapped to expense categories for the Recharts bar chart
 const CATEGORY_COLORS: Record<FinanceCategory, string> = {
@@ -275,18 +276,13 @@ export default function FinancePage() {
             </div>
 
             <div>
-              <label
-                htmlFor="finance-date"
-                className="block font-heading text-[10px] uppercase text-pico-navy mb-1.5"
-              >
+              <span className="block font-heading text-[10px] uppercase text-pico-navy mb-1.5">
                 Date *
-              </label>
-              <input
-                id="finance-date"
-                type="date"
+              </span>
+              <PixelDateTimePicker
+                dateOnly
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="pixel-input w-full px-3 py-2.5 text-base text-pico-navy"
+                onChange={(nextDate) => setDate(nextDate)}
               />
             </div>
           </div>

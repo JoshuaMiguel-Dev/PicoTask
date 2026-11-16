@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { NewTaskInput, Task } from '../types/task';
 import { getDefaultDeadlineInput } from '../utils/dateUtils';
+import PixelDateTimePicker from './PixelDateTimePicker';
 
 interface TaskFormProps {
   /** If provided, the form operates in "Edit Mode" for this task */
@@ -110,23 +111,17 @@ export default function TaskForm({
         />
       </div>
 
-      {/* Deadline Input */}
+      {/* Custom PICO-8 Pixel Deadline Calendar & Time Picker */}
       <div>
-        <label
-          htmlFor={isEditing ? `task-deadline-${initialTask?.id}` : 'task-deadline-new'}
-          className="block font-heading text-[10px] uppercase text-pico-navy mb-1.5"
-        >
+        <span className="block font-heading text-[10px] uppercase text-pico-navy mb-1.5">
           Deadline *
-        </label>
-        <input
-          id={isEditing ? `task-deadline-${initialTask?.id}` : 'task-deadline-new'}
-          type="datetime-local"
+        </span>
+        <PixelDateTimePicker
           value={deadline}
-          onChange={(e) => {
-            setDeadline(e.target.value);
+          onChange={(nextDeadline) => {
+            setDeadline(nextDeadline);
             if (error) setError(null);
           }}
-          className="pixel-input w-full px-3 py-2.5 text-base text-pico-navy font-body"
         />
       </div>
 
