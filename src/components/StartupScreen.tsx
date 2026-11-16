@@ -71,6 +71,13 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
 
   function handleStartFirstTime(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        void document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+      }
+    } catch {
+      // Ignore if browser blocks fullscreen
+    }
     const finalCatName = (catName.trim() || 'MINGMING').toUpperCase();
     localStorage.setItem(CAT_NAME_STORAGE_KEY, finalCatName);
     localStorage.setItem(ONBOARDED_KEY, 'true');

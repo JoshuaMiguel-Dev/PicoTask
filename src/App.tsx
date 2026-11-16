@@ -14,7 +14,28 @@ type NavTab = 'tasks' | 'calendar' | 'clock' | 'finance';
 export default function App() {
   const [hasLaunched, setHasLaunched] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NavTab>('tasks');
+  const [isImmersive, setIsImmersive] = useState<boolean>(false);
   const now = useClock();
+
+  useEffect(() => {
+    function handleFsChange() {
+      setIsImmersive(Boolean(document.fullscreenElement));
+    }
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  async function toggleImmersiveFullscreen() {
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // Ignore if unsupported
+    }
+  }
 
   // Keyboard shortcuts: Alt+1 (Tasks), Alt+2 (Calendar), Alt+3 (Clock), Alt+4 (Finance)
   useEffect(() => {
@@ -70,6 +91,15 @@ export default function App() {
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <PwaStatusPill />
+
+              <button
+                type="button"
+                onClick={() => void toggleImmersiveFullscreen()}
+                title="Toggle Fullscreen Immersive Mode (hides system bars)"
+                className="pixel-btn bg-pico-cream text-pico-navy px-2 py-1 font-heading text-[9px] uppercase"
+              >
+                {isImmersive ? '[Exit FS]' : '[Full]'}
+              </button>
 
               <button
                 type="button"
