@@ -99,16 +99,59 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="space-y-3.5">
-      {/* Slim Streak Pet Companion Bar (No startup popup) */}
+    <div className="space-y-4">
+      {/* 1. Streak Companion Console Card */}
       <StreakPetCard />
 
-      {/* Action Bar: Filter Tabs + "+ New" Trigger in one clean row */}
-      <div className="flex items-center justify-between gap-2">
+      {/* 2. Unified Task Ledger Control Deck */}
+      <section className="pixel-card p-3.5 sm:p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="font-heading text-xs sm:text-sm text-pico-navy uppercase">
+              Task Ledger
+            </h2>
+            <p className="text-xs sm:text-sm text-pico-gray">
+              {activeCount} pending // {completedCount} completed
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {(notifStatus === 'default' || notifStatus === 'granted') && (
+              <button
+                type="button"
+                onClick={() => void handleAlertToggle()}
+                title={
+                  notifStatus === 'granted'
+                    ? 'Send a test OS notification'
+                    : 'Enable OS deadline alerts'
+                }
+                className={`pixel-btn min-h-10 px-2.5 py-1.5 font-heading text-[8px] uppercase ${
+                  notifStatus === 'granted'
+                    ? 'bg-pico-green text-pico-cream'
+                    : 'bg-pico-peach text-pico-navy'
+                }`}
+              >
+                {notifStatus === 'granted' ? 'Alerts:ON' : 'Alerts:OFF'}
+              </button>
+            )}
+
+            {!isAdding && !editingTask && (
+              <button
+                type="button"
+                onClick={() => setIsAdding(true)}
+                className="pixel-btn min-h-10 px-3.5 py-1.5 bg-pico-red text-pico-cream font-heading text-[9px] sm:text-[10px] uppercase"
+              >
+                + New Task
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Integrated Filter Tabs inside the Ledger Control Deck */}
         <div
           role="group"
-          aria-label="Filter tasks"
-          className="inline-flex gap-1.5"
+          aria-label="Filter tasks by status"
+          className="grid grid-cols-3 gap-2 pt-2 border-t-2 border-pico-navy"
         >
           {(['all', 'active', 'completed'] as const).map((mode) => {
             const isSelected = filter === mode;
@@ -119,54 +162,26 @@ export default function TasksPage() {
                   ? activeCount
                   : completedCount;
 
-            const label =
-              mode === 'all' ? 'All' : mode === 'active' ? 'To-Do' : 'Done';
-
             return (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setFilter(mode)}
-                className={`pixel-btn min-h-10 px-2.5 py-1.5 font-heading text-[9px] uppercase flex items-center gap-1 ${
+                className={`pixel-btn min-h-10 px-2 py-1.5 font-heading text-[9px] uppercase flex items-center justify-center gap-1.5 ${
                   isSelected
                     ? 'bg-pico-blue text-pico-navy'
                     : 'bg-pico-cream text-pico-navy'
                 }`}
               >
-                <span>{label}</span>
-                <span className="opacity-75">({count})</span>
+                <span>{mode}</span>
+                <span className="bg-pico-navy text-pico-cream px-1.5 py-0.5 text-[8px]">
+                  {count}
+                </span>
               </button>
             );
           })}
         </div>
-
-        <div className="flex items-center gap-1.5">
-          {(notifStatus === 'default' || notifStatus === 'granted') && (
-            <button
-              type="button"
-              onClick={() => void handleAlertToggle()}
-              title={
-                notifStatus === 'granted'
-                  ? 'Send a test notification'
-                  : 'Enable OS deadline alerts'
-              }
-              className="pixel-btn min-h-10 px-2.5 py-1.5 bg-pico-peach text-pico-navy font-heading text-[8px] uppercase"
-            >
-              {notifStatus === 'granted' ? 'Bell:ON' : 'Bell:OFF'}
-            </button>
-          )}
-
-          {!isAdding && !editingTask && (
-            <button
-              type="button"
-              onClick={() => setIsAdding(true)}
-              className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-red text-pico-cream font-heading text-[9px] sm:text-[10px] uppercase"
-            >
-              + New
-            </button>
-          )}
-        </div>
-      </div>
+      </section>
 
       {/* Collapsible Add / Edit Form Panel */}
       {isAdding && (
@@ -185,20 +200,20 @@ export default function TasksPage() {
         />
       )}
 
-      {/* Task List or Calm Empty State */}
+      {/* Task List or Empty State */}
       {filteredTasks.length === 0 ? (
-        <div className="pixel-card p-6 text-center space-y-2">
-          <p className="font-heading text-[10px] uppercase text-pico-navy">
-            {filter === 'all' ? 'No Tasks Yet' : `No ${filter} tasks`}
-          </p>
-          <p className="text-sm sm:text-base text-pico-gray">
+        <div className="pixel-card p-7 text-center space-y-2.5">
+          <div className="inline-block bg-pico-peach border-2 border-pico-navy px-2.5 py-1 font-heading text-[9px] uppercase text-pico-navy">
+            {filter === 'all' ? 'Ledger Empty' : `No ${filter} tasks`}
+          </div>
+          <p className="text-sm sm:text-base text-pico-gray max-w-sm mx-auto">
             {filter === 'all'
-              ? 'Tap "+ New" above to add your first task.'
-              : `Nothing in "${filter}" right now.`}
+              ? 'No tasks scheduled yet. Press "+ New Task" above to log your first deadline.'
+              : `You have no ${filter} tasks right now.`}
           </p>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {filteredTasks.map((task) => (
             <TaskItem
               key={task.id}
