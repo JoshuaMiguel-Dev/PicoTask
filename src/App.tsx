@@ -45,13 +45,14 @@ export default function App() {
   }
 
   return (
-    <div className="h-dvh w-screen overflow-hidden bg-pico-navy/10 flex justify-center">
+    <div className="fixed inset-0 w-full h-dvh overflow-hidden bg-pico-navy/10 flex justify-center">
       {/*
-        Fixed-Frame PICO-8 Console Shell (`h-dvh overflow-hidden flex flex-col`):
-        - Top `<header>` and Bottom `<nav>` are locked (`shrink-0`) so they never move or bounce.
-        - Inner `<main>` has its own dedicated internal scrollbar (`overflow-y-auto pico-scroll`).
+        Fixed-Frame PICO-8 Console Shell:
+        - Pinned to the screen (`fixed inset-0` wrapper + `overflow-hidden`) so nothing drags horizontally.
+        - Top `<header>` and Bottom `<nav>` are locked (`shrink-0`).
+        - Inner `<main>` only scrolls vertically (`pico-scroll`).
       */}
-      <div className="animate-app-reveal h-dvh w-full max-w-3xl flex flex-col overflow-hidden bg-pico-cream text-pico-navy border-4 border-pico-navy">
+      <div className="animate-app-reveal h-full w-full max-w-3xl flex flex-col overflow-hidden bg-pico-cream text-pico-navy border-4 border-pico-navy">
         {/* Locked Top PICO-8 Hardware Console Header */}
         <header className="shrink-0 border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
           <div className="flex items-center justify-between gap-2">
@@ -90,12 +91,12 @@ export default function App() {
           />
         </div>
 
-        {/* Dedicated Internal Scrollable Viewport (`overflow-y-auto overscroll-contain`) */}
+        {/* Dedicated Internal Scrollable Viewport (Strictly vertical scroll, no horizontal drag) */}
         <main
           key={activeTab}
           id="main-content"
           tabIndex={-1}
-          className="pico-scroll animate-app-reveal flex-1 min-h-0 w-full overflow-y-auto overscroll-contain px-3 sm:px-4 py-4 focus:outline-none"
+          className="pico-scroll animate-app-reveal flex-1 min-h-0 w-full px-3 sm:px-4 py-3.5 focus:outline-none"
         >
           {activeTab === 'tasks' && <TasksPage />}
           {activeTab === 'calendar' && <CalendarPage />}
@@ -103,7 +104,7 @@ export default function App() {
           {activeTab === 'finance' && <FinancePage />}
         </main>
 
-        {/* Locked Bottom Navigation Bar (Part of the console frame, never shifts) */}
+        {/* Locked Bottom Navigation Bar */}
         <nav
           aria-label="Primary Bottom Navigation"
           className="shrink-0 w-full bg-pico-peach border-t-4 border-pico-navy z-20"
