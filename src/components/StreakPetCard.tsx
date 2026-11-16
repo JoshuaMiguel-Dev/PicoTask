@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { calculateStreakSummary, type CatMood } from '../utils/streakUtils';
@@ -15,12 +15,15 @@ const MOOD_BADGES: Record<CatMood, { label: string; bg: string }> = {
 
 /**
  * Rich PICO-8 Streak Companion Card with:
- * - Framed interactive Pixel Cat portrait on the left (even on mobile 375px!)
- * - Speech bubble, Streak counter, Daily Quest progress bar, and inline Rename on the right
- * - No blocking full-screen modal popup on launch
+ * - Normal tap (1–4 pats): Headpat squish & happy bounce animation (no sound).
+ * - Every 5th tap (`patCount % 5 === 0`): Special 360° Super Zoomies Backflip + confetti!
  */
 export default function StreakPetCard() {
   const [isPetted, setIsPetted] = useState(false);
+  const [isSuperCombo, setIsSuperCombo] = useState(false);
+  const [, setPatCount] = useState(0);
+  const resetTimerRef = useRef<number | null>(null);
+
   const [catName, setCatName] = useState<string>(() => {
     return localStorage.getItem(CAT_NAME_STORAGE_KEY) || 'MINGMING';
   });
@@ -31,10 +34,32 @@ export default function StreakPetCard() {
   const summary = calculateStreakSummary(allTasks ?? []);
 
   function handlePetCat() {
-    setIsPetted(true);
-    window.setTimeout(() => {
-      setIsPetted(false);
-    }, 850);
+    if (resetTimerRef.current !== null) {
+      window.clearTimeout(resetTimerRef.current);
+    }
+
+    setIsPetted(false);
+    setIsSuperCombo(false);
+
+    setPatCount((prev) => {
+      const next = prev + 1;
+      const reachedFiveCombo = next % 5 === 0;
+
+      window.requestAnimationFrame(() => {
+        if (reachedFiveCombo) {
+          setIsSuperCombo(true);
+        } else {
+          setIsPetted(true);
+        }
+      });
+
+      resetTimerRef.current = window.setTimeout(() => {
+        setIsPetted(false);
+        setIsSuperCombo(false);
+      }, reachedFiveCombo ? 950 : 780);
+
+      return next;
+    });
   }
 
   function handleSaveCatName(e: FormEvent<HTMLFormElement>) {
@@ -112,16 +137,21 @@ export default function StreakPetCard() {
         </div>
       </div>
 
-      {/* Main Side-by-Side Companion Body (Horizontal even on 375px mobile!) */}
+      {/* Main Side-by-Side Companion Body */}
       <div className="flex items-stretch gap-3">
         {/* Framed Pixel Cat Portrait Box */}
         <button
           type="button"
           onClick={handlePetCat}
           aria-label={`Pet ${catName}`}
-          className="pixel-btn bg-pico-cream px-2.5 py-2 shrink-0 flex flex-col items-center justify-center group"
+          className="pixel-btn bg-pico-cream px-2.5 py-2 shrink-0 flex flex-col items-center justify-center group overflow-hidden"
         >
-          <PixelCat mood={summary.mood} size="md" isPetted={isPetted} />
+          <PixelCat
+            mood={summary.mood}
+            size="md"
+            isPetted={isPetted}
+            isSuperCombo={isSuperCombo}
+          />
           <span className="mt-1 font-heading text-[7px] uppercase text-pico-gray group-hover:text-pico-navy">
             [Pet]
           </span>
@@ -132,9 +162,11 @@ export default function StreakPetCard() {
           <div className="bg-pico-cream border-2 border-pico-navy p-2.5 shadow-[2px_2px_0px_#1D2B53] flex-1 flex items-center">
             <p className="text-sm sm:text-base font-bold text-pico-navy leading-snug">
               &ldquo;
-              {isPetted
-                ? `Purrrr! ${catName} loves the headpats!`
-                : summary.statusMessage}
+              {isSuperCombo
+                ? `*SUPER ZOOMIES!!* ${catName} did a 5-pat backflip!`
+                : isPetted
+                  ? `Purrrr! ${catName} loves the headpats!`
+                  : summary.statusMessage}
               &rdquo;
             </p>
           </div>

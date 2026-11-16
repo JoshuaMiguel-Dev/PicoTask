@@ -6,6 +6,8 @@ interface PixelCatProps {
   size?: 'sm' | 'md' | 'lg';
   /** Whether the user just tapped/petted the cat */
   isPetted?: boolean;
+  /** Triggered on every 5th pat combo */
+  isSuperCombo?: boolean;
 }
 
 /**
@@ -20,12 +22,21 @@ export default function PixelCat({
   mood,
   size = 'md',
   isPetted = false,
+  isSuperCombo = false,
 }: PixelCatProps) {
   const dimensions = {
     sm: 'w-14 h-12',
     md: 'w-20 h-16',
     lg: 'w-24 h-20',
   }[size];
+
+  const animClass = isSuperCombo
+    ? 'animate-cat-super'
+    : isPetted
+      ? 'animate-cat-pat'
+      : 'transition-transform duration-150';
+
+  const isActiveReaction = isPetted || isSuperCombo;
 
   return (
     <svg
@@ -34,12 +45,10 @@ export default function PixelCat({
       shapeRendering="crispEdges"
       role="img"
       aria-label={`Pixel gray companion cat feeling ${mood}`}
-      className={`${dimensions} select-none transition-transform duration-150 ${
-        isPetted ? '-translate-y-1' : ''
-      }`}
+      className={`${dimensions} select-none ${animClass}`}
     >
       {/* --- MOOD: SLEEPY (Curled gray loaf posture + floating Blue Zzz) --- */}
-      {mood === 'sleepy' ? (
+      {mood === 'sleepy' && !isActiveReaction ? (
         <g>
           {/* Floating Zzz in PICO Blue */}
           <rect x="17" y="2" width="3" height="1" fill="#29ADFF" />
@@ -84,8 +93,8 @@ export default function PixelCat({
         /* --- MOODS: HAPPY, NEUTRAL, SAD (Sitting Gray Cat Posture) --- */
         <g>
           {/* Floating Heart when HAPPY or PETTED */}
-          {(mood === 'happy' || isPetted) && (
-            <g>
+          {(mood === 'happy' || isActiveReaction) && (
+            <g className={isActiveReaction ? 'animate-heart-float' : ''}>
               <rect x="18" y="2" width="2" height="1" fill="#FF004D" />
               <rect x="21" y="2" width="2" height="1" fill="#FF004D" />
               <rect x="17" y="3" width="7" height="2" fill="#FF004D" />
@@ -95,10 +104,24 @@ export default function PixelCat({
             </g>
           )}
 
-          {/* Ears: Droopy if SAD, Perky if HAPPY/NEUTRAL */}
-          {mood === 'sad' ? (
+          {/* Extra left sparkle when patted, plus rainbow pixel confetti on 5x Super Combo */}
+          {isActiveReaction && (
+            <g className="animate-heart-float">
+              <rect x="1" y="2" width="1" height="3" fill="#FFA300" />
+              <rect x="0" y="3" width="3" height="1" fill="#FFA300" />
+            </g>
+          )}
+          {isSuperCombo && (
             <g>
-              {/* Flattened droopy ears */}
+              <rect x="1" y="14" width="2" height="2" fill="#29ADFF" />
+              <rect x="21" y="13" width="2" height="2" fill="#008751" />
+              <rect x="9" y="1" width="2" height="2" fill="#FFA300" />
+            </g>
+          )}
+
+          {/* Ears: Droopy if SAD, Perky if HAPPY/NEUTRAL */}
+          {mood === 'sad' && !isActiveReaction ? (
+            <g>
               <rect x="3" y="4" width="4" height="2" fill="#1D2B53" />
               <rect x="4" y="5" width="2" height="1" fill="#5F574F" />
               <rect x="13" y="4" width="4" height="2" fill="#1D2B53" />
@@ -106,7 +129,6 @@ export default function PixelCat({
             </g>
           ) : (
             <g>
-              {/* Perky pointed ears */}
               <rect x="4" y="2" width="2" height="1" fill="#1D2B53" />
               <rect x="3" y="3" width="4" height="2" fill="#1D2B53" />
               <rect x="4" y="4" width="2" height="1" fill="#FF004D" />
@@ -136,7 +158,21 @@ export default function PixelCat({
           <rect x="17" y="10" width="2" height="1" fill="#1D2B53" />
 
           {/* Eyes by Mood */}
-          {mood === 'happy' || isPetted ? (
+          {isSuperCombo ? (
+            <g>
+              {/* Starry / Excited > < pixel eyes on 5x Combo */}
+              <rect x="5" y="6" width="1" height="1" fill="#1D2B53" />
+              <rect x="6" y="7" width="1" height="1" fill="#1D2B53" />
+              <rect x="5" y="8" width="1" height="1" fill="#1D2B53" />
+
+              <rect x="14" y="6" width="1" height="1" fill="#1D2B53" />
+              <rect x="13" y="7" width="1" height="1" fill="#1D2B53" />
+              <rect x="14" y="8" width="1" height="1" fill="#1D2B53" />
+
+              <rect x="4" y="8" width="2" height="1" fill="#FF004D" />
+              <rect x="14" y="8" width="2" height="1" fill="#FF004D" />
+            </g>
+          ) : mood === 'happy' || isPetted ? (
             <g>
               {/* Happy ^ ^ pixel eyes */}
               <rect x="5" y="7" width="1" height="1" fill="#1D2B53" />
@@ -175,7 +211,7 @@ export default function PixelCat({
 
           {/* Nose & Mouth */}
           <rect x="9" y="8" width="2" height="1" fill="#FF004D" />
-          {mood === 'sad' ? (
+          {mood === 'sad' && !isActiveReaction ? (
             <rect x="9" y="10" width="2" height="1" fill="#1D2B53" />
           ) : (
             <g>
@@ -194,14 +230,14 @@ export default function PixelCat({
           <rect x="11" y="16" width="3" height="2" fill="#C2C3C7" />
           <rect x="5" y="18" width="10" height="1" fill="#1D2B53" />
 
-          {/* Tail (High & perky when happy/neutral, low when sad) */}
-          {mood === 'sad' ? (
+          {/* Tail (High & perky when happy/neutral, wags when petted, low when sad) */}
+          {mood === 'sad' && !isActiveReaction ? (
             <g>
               <rect x="15" y="16" width="4" height="2" fill="#1D2B53" />
               <rect x="15" y="16" width="3" height="1" fill="#5F574F" />
             </g>
           ) : (
-            <g>
+            <g className={isActiveReaction ? 'animate-tail-wag' : ''}>
               <rect x="15" y="14" width="3" height="3" fill="#1D2B53" />
               <rect x="17" y="11" width="3" height="4" fill="#1D2B53" />
               <rect x="18" y="9" width="2" height="2" fill="#1D2B53" />
