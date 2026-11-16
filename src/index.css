@@ -103,8 +103,64 @@
   transform-origin: center center;
 }
 
+/* Console Power-On Entrance (Startup Card) */
+@keyframes console-power-on {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.6) scaleY(0.05);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.02) scaleY(0.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1) scaleY(1);
+  }
+}
+
+/* Startup Screen Curtain Exit */
+@keyframes startup-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.96);
+  }
+}
+
+/* Main Console Workspace Reveal */
+@keyframes app-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-power-on {
+  animation: console-power-on 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center center;
+}
+
+.animate-startup-exit {
+  animation: startup-exit 300ms ease-in forwards;
+}
+
+.animate-app-reveal {
+  animation: app-reveal 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-flap {
+  .animate-flap,
+  .animate-power-on,
+  .animate-startup-exit,
+  .animate-app-reveal {
     animation: none;
   }
 }

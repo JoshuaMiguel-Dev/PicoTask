@@ -17,11 +17,8 @@ interface StartupScreenProps {
  *    Crisp 8-bit Console Boot / Loading Screen with a segmented pixel progress bar
  *    and their companion cat before entering the workspace.
  *
- * Interview Note (Referential Equality in React `useEffect`):
- * Because the parent `<App />` ticks every 1000ms via `useClock()`, passing an inline
- * `onFinish={() => ...}` prop creates a new function reference every 1000ms.
- * Storing `onFinish` in a `useRef` (`onFinishRef`) prevents the 1000ms parent re-render
- * from resetting our boot timer before it finishes!
+ * Includes a CRT power-on entrance animation (`animate-power-on`) and a smooth
+ * exit curtain transition (`animate-startup-exit`) before unmounting.
  */
 export default function StartupScreen({ onFinish }: StartupScreenProps) {
   const onFinishRef = useRef(onFinish);
@@ -40,6 +37,7 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
 
   const [isBooting, setIsBooting] = useState<boolean>(isReturningUser);
   const [bootStep, setBootStep] = useState<number>(0);
+  const [isExiting, setIsExiting] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isBooting) return;
@@ -54,12 +52,19 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
       });
     }, 220);
 
+    // Start exit animation right after hitting READY!
+    const exitAnimTimer = window.setTimeout(() => {
+      setIsExiting(true);
+    }, 1050);
+
+    // Complete transition after the exit animation finishes (1050ms + 280ms)
     const finishTimer = window.setTimeout(() => {
       onFinishRef.current();
-    }, 1050);
+    }, 1330);
 
     return () => {
       window.clearInterval(stepInterval);
+      window.clearTimeout(exitAnimTimer);
       window.clearTimeout(finishTimer);
     };
   }, [isBooting]);
@@ -84,8 +89,12 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
   ];
 
   return (
-    <div className="min-h-dvh bg-pico-navy flex items-center justify-center p-4">
-      <div className="w-full max-w-md pixel-card-peach p-5 sm:p-7 border-4 border-pico-navy shadow-[6px_6px_0px_#0B1228] text-center space-y-5">
+    <div className="min-h-dvh bg-pico-navy flex items-center justify-center p-4 overflow-hidden">
+      <div
+        className={`w-full max-w-md pixel-card-peach p-5 sm:p-7 border-4 border-pico-navy shadow-[6px_6px_0px_#0B1228] text-center space-y-5 ${
+          isExiting ? 'animate-startup-exit' : 'animate-power-on'
+        }`}
+      >
         {/* Top Cartridge Header Strip */}
         <div className="flex items-center justify-between border-b-2 border-pico-navy pb-2.5">
           <div className="flex items-center gap-1.5">

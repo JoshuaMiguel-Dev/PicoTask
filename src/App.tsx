@@ -47,7 +47,7 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-pico-navy/10 flex justify-center">
       {/* Framed PICO-8 Console Shell with Left & Right Structural Borders */}
-      <div className="min-h-dvh w-full max-w-3xl flex flex-col bg-pico-cream text-pico-navy border-x-4 border-t-4 border-pico-navy relative">
+      <div className="animate-app-reveal min-h-dvh w-full max-w-3xl flex flex-col bg-pico-cream text-pico-navy border-x-4 border-t-4 border-pico-navy relative">
         {/* Top PICO-8 Hardware Console Header */}
         <header className="border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
           <div className="flex items-center justify-between gap-2">
@@ -84,9 +84,10 @@ export default function App() {
 
         {/* Main Content Area */}
         <main
+          key={activeTab}
           id="main-content"
           tabIndex={-1}
-          className="flex-1 w-full px-3 sm:px-4 py-4 pb-24 focus:outline-none"
+          className="animate-app-reveal flex-1 w-full px-3 sm:px-4 py-4 pb-24 focus:outline-none"
         >
           {activeTab === 'tasks' && <TasksPage />}
           {activeTab === 'calendar' && <CalendarPage />}
