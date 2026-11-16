@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'PICO TASK // Desk Companion',
-        short_name: 'PICO TASK',
+        name: 'PicoTask',
+        short_name: 'PicoTask',
         description:
           'PICO-8 inspired tactile pixel task manager, calendar, focus timer, and finance PWA.',
         theme_color: '#1D2B53',

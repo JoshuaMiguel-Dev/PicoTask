@@ -9,12 +9,11 @@ interface PixelCatProps {
 }
 
 /**
- * Original 8-bit Pixel Art Cat drawn strictly with crisp SVG `<rect>` coordinates
- * using the official PICO-8 palette:
- * - Outline & Eyes: Navy `#1D2B53`
- * - Primary Fur: Peach `#FFCCAA` & Orange `#FFA300` tabby stripes
- * - Belly / Highlight: Cream `#FFF1E8`
- * - Nose / Heart: Red-Pink `#FF004D`
+ * Original 8-bit Pixelated Gray Cat drawn strictly with crisp SVG `<rect>` coordinates:
+ * - Outline & Eyes: Dark Navy `#1D2B53`
+ * - Primary Fur: Classic Gray `#7E7872` & Darker Gray `#5F574F` tabby stripes
+ * - Chest / Paws / Highlight: Silver-Gray `#C2C3C7` & Cream `#FFF1E8`
+ * - Nose / Inner Ears / Heart: Pink `#FF004D`
  * - Tears / Zzz: Blue `#29ADFF`
  */
 export default function PixelCat({
@@ -34,12 +33,12 @@ export default function PixelCat({
       viewBox="0 0 24 20"
       shapeRendering="crispEdges"
       role="img"
-      aria-label={`Pixel companion cat feeling ${mood}`}
+      aria-label={`Pixel gray companion cat feeling ${mood}`}
       className={`${dimensions} select-none transition-transform duration-150 ${
         isPetted ? '-translate-y-1' : ''
       }`}
     >
-      {/* --- MOOD: SLEEPY (Curled loaf posture + floating Blue Zzz) --- */}
+      {/* --- MOOD: SLEEPY (Curled gray loaf posture + floating Blue Zzz) --- */}
       {mood === 'sleepy' ? (
         <g>
           {/* Floating Zzz in PICO Blue */}
@@ -50,24 +49,25 @@ export default function PixelCat({
           <rect x="20" y="5" width="2" height="1" fill="#29ADFF" />
           <rect x="20" y="6" width="2" height="1" fill="#29ADFF" />
 
-          {/* Ears (Navy outline + Orange/Peach inner) */}
+          {/* Ears (Navy outline + Pink/Gray inner) */}
           <rect x="4" y="7" width="3" height="2" fill="#1D2B53" />
-          <rect x="5" y="8" width="1" height="1" fill="#FFA300" />
+          <rect x="5" y="8" width="1" height="1" fill="#FF004D" />
           <rect x="11" y="7" width="3" height="2" fill="#1D2B53" />
-          <rect x="12" y="8" width="1" height="1" fill="#FFA300" />
+          <rect x="12" y="8" width="1" height="1" fill="#FF004D" />
 
           {/* Curled Body Outline (Navy) */}
           <rect x="3" y="9" width="16" height="8" fill="#1D2B53" />
           <rect x="2" y="11" width="18" height="5" fill="#1D2B53" />
 
-          {/* Curled Body Fill (Peach fur + Orange stripes) */}
-          <rect x="4" y="10" width="14" height="6" fill="#FFCCAA" />
-          <rect x="3" y="11" width="16" height="4" fill="#FFCCAA" />
+          {/* Curled Body Fill (Gray fur + Silver belly highlight) */}
+          <rect x="4" y="10" width="14" height="6" fill="#7E7872" />
+          <rect x="3" y="11" width="16" height="4" fill="#7E7872" />
+          <rect x="6" y="13" width="6" height="2" fill="#C2C3C7" />
 
-          {/* Tabby Stripes on Back */}
-          <rect x="14" y="10" width="2" height="3" fill="#FFA300" />
-          <rect x="17" y="11" width="1" height="3" fill="#FFA300" />
-          <rect x="8" y="10" width="2" height="1" fill="#FFA300" />
+          {/* Dark Gray Tabby Stripes on Back */}
+          <rect x="14" y="10" width="2" height="3" fill="#5F574F" />
+          <rect x="17" y="11" width="1" height="3" fill="#5F574F" />
+          <rect x="8" y="10" width="2" height="1" fill="#5F574F" />
 
           {/* Closed Sleeping Eyes (- -) */}
           <rect x="5" y="12" width="2" height="1" fill="#1D2B53" />
@@ -78,10 +78,10 @@ export default function PixelCat({
 
           {/* Curled Tail Tucked in Front */}
           <rect x="13" y="14" width="5" height="1" fill="#1D2B53" />
-          <rect x="14" y="15" width="4" height="1" fill="#FFA300" />
+          <rect x="14" y="15" width="4" height="1" fill="#5F574F" />
         </g>
       ) : (
-        /* --- MOODS: HAPPY, NEUTRAL, SAD (Sitting Posture) --- */
+        /* --- MOODS: HAPPY, NEUTRAL, SAD (Sitting Gray Cat Posture) --- */
         <g>
           {/* Floating Heart when HAPPY or PETTED */}
           {(mood === 'happy' || isPetted) && (
@@ -100,9 +100,9 @@ export default function PixelCat({
             <g>
               {/* Flattened droopy ears */}
               <rect x="3" y="4" width="4" height="2" fill="#1D2B53" />
-              <rect x="4" y="5" width="2" height="1" fill="#FFA300" />
+              <rect x="4" y="5" width="2" height="1" fill="#5F574F" />
               <rect x="13" y="4" width="4" height="2" fill="#1D2B53" />
-              <rect x="14" y="5" width="2" height="1" fill="#FFA300" />
+              <rect x="14" y="5" width="2" height="1" fill="#5F574F" />
             </g>
           ) : (
             <g>
@@ -121,12 +121,13 @@ export default function PixelCat({
           <rect x="3" y="5" width="14" height="7" fill="#1D2B53" />
           <rect x="2" y="6" width="16" height="5" fill="#1D2B53" />
 
-          {/* Head Fill (Peach fur + Orange forehead stripes) */}
-          <rect x="4" y="5" width="12" height="6" fill="#FFCCAA" />
-          <rect x="3" y="6" width="14" height="4" fill="#FFCCAA" />
-          <rect x="9" y="5" width="2" height="2" fill="#FFA300" />
-          <rect x="4" y="5" width="2" height="1" fill="#FFA300" />
-          <rect x="14" y="5" width="2" height="1" fill="#FFA300" />
+          {/* Head Fill (Gray fur + Dark Gray forehead tabby stripes + Silver muzzle) */}
+          <rect x="4" y="5" width="12" height="6" fill="#7E7872" />
+          <rect x="3" y="6" width="14" height="4" fill="#7E7872" />
+          <rect x="6" y="8" width="8" height="3" fill="#C2C3C7" />
+          <rect x="9" y="5" width="2" height="2" fill="#5F574F" />
+          <rect x="4" y="5" width="2" height="1" fill="#5F574F" />
+          <rect x="14" y="5" width="2" height="1" fill="#5F574F" />
 
           {/* Whiskers */}
           <rect x="1" y="8" width="2" height="1" fill="#1D2B53" />
@@ -185,27 +186,27 @@ export default function PixelCat({
 
           {/* Sitting Torso & Paws */}
           <rect x="5" y="12" width="10" height="6" fill="#1D2B53" />
-          <rect x="6" y="12" width="8" height="5" fill="#FFCCAA" />
-          {/* Cream Chest Patch */}
-          <rect x="8" y="12" width="4" height="3" fill="#FFF1E8" />
+          <rect x="6" y="12" width="8" height="5" fill="#7E7872" />
+          {/* Silver-Gray Chest Patch */}
+          <rect x="8" y="12" width="4" height="3" fill="#C2C3C7" />
           {/* Front Paws */}
-          <rect x="6" y="16" width="3" height="2" fill="#FFF1E8" />
-          <rect x="11" y="16" width="3" height="2" fill="#FFF1E8" />
+          <rect x="6" y="16" width="3" height="2" fill="#C2C3C7" />
+          <rect x="11" y="16" width="3" height="2" fill="#C2C3C7" />
           <rect x="5" y="18" width="10" height="1" fill="#1D2B53" />
 
           {/* Tail (High & perky when happy/neutral, low when sad) */}
           {mood === 'sad' ? (
             <g>
               <rect x="15" y="16" width="4" height="2" fill="#1D2B53" />
-              <rect x="15" y="16" width="3" height="1" fill="#FFA300" />
+              <rect x="15" y="16" width="3" height="1" fill="#5F574F" />
             </g>
           ) : (
             <g>
               <rect x="15" y="14" width="3" height="3" fill="#1D2B53" />
               <rect x="17" y="11" width="3" height="4" fill="#1D2B53" />
               <rect x="18" y="9" width="2" height="2" fill="#1D2B53" />
-              <rect x="16" y="15" width="2" height="1" fill="#FFA300" />
-              <rect x="18" y="11" width="1" height="3" fill="#FFA300" />
+              <rect x="16" y="15" width="2" height="1" fill="#7E7872" />
+              <rect x="18" y="11" width="1" height="3" fill="#5F574F" />
             </g>
           )}
         </g>

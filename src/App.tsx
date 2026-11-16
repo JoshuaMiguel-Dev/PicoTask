@@ -52,12 +52,14 @@ export default function App() {
         <header className="border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span
-                className="inline-block w-3 h-3 shrink-0 bg-pico-red border-2 border-pico-navy"
+              <img
+                src="/icon.svg"
+                alt=""
                 aria-hidden="true"
+                className="w-6 h-6 shrink-0"
               />
               <h1 className="font-heading text-xs sm:text-sm tracking-tight text-pico-navy truncate">
-                PICO TASK
+                PicoTask
               </h1>
             </div>
 

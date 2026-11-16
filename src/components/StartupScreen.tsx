@@ -113,7 +113,7 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
             Personal Desk Companion
           </p>
           <h1 className="font-heading text-lg sm:text-xl text-pico-cream tracking-tight">
-            PICO TASK
+            PicoTask
           </h1>
         </div>
 
