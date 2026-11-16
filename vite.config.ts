@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'PicoTask — 8-Bit Desk Companion (Demo)',
+        name: 'PicoTask',
         short_name: 'PicoTask',
         description:
           'Interactive 8-bit PICO-8 student desk companion PWA demo with task deadlines, calendar, split-flap focus timer, streak cat pet, and Peso finance tracker.',
