@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { useClock } from './hooks/useClock';
 import DeadlineBanner from './components/DeadlineBanner';
 import PwaStatusPill from './components/PwaStatusPill';
+import StartupScreen from './components/StartupScreen';
 import TasksPage from './pages/TasksPage';
 import CalendarPage from './pages/CalendarPage';
 import ClockPage from './pages/ClockPage';
@@ -11,6 +12,7 @@ import FinancePage from './pages/FinancePage';
 type NavTab = 'tasks' | 'calendar' | 'clock' | 'finance';
 
 export default function App() {
+  const [hasLaunched, setHasLaunched] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NavTab>('tasks');
   const now = useClock();
 
@@ -36,6 +38,11 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Show First-Time Startup Menu or Returning User Boot Loading Screen first
+  if (!hasLaunched) {
+    return <StartupScreen onFinish={() => setHasLaunched(true)} />;
+  }
 
   return (
     <div className="min-h-dvh bg-pico-navy/10 flex justify-center">

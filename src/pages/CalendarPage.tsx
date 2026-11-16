@@ -218,12 +218,16 @@ export default function CalendarPage() {
                   )}
                 </div>
 
-                {/* Task count pill inside day cell */}
+                {/* Task count pill inside day cell (compact number on mobile, +TSK on desktop) */}
                 {dayTasks.length > 0 && (
                   <div
-                    className={`w-full mt-1 px-1 py-0.5 border border-pico-navy font-heading text-[8px] sm:text-[9px] text-center tabular-nums ${badgeColor}`}
+                    className={`w-full mt-1 px-0.5 sm:px-1 py-0.5 border border-pico-navy font-heading text-[8px] sm:text-[9px] text-center tabular-nums truncate ${badgeColor}`}
                   >
-                    {dayTasks.length} {dayTasks.length === 1 ? 'TSK' : 'TSKS'}
+                    <span>{dayTasks.length}</span>
+                    <span className="hidden sm:inline">
+                      {' '}
+                      {dayTasks.length === 1 ? 'TSK' : 'TSKS'}
+                    </span>
                   </div>
                 )}
               </button>

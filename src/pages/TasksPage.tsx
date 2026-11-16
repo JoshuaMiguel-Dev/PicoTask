@@ -151,7 +151,7 @@ export default function TasksPage() {
         <div
           role="group"
           aria-label="Filter tasks by status"
-          className="grid grid-cols-3 gap-2 pt-2 border-t-2 border-pico-navy"
+          className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-2 border-t-2 border-pico-navy"
         >
           {(['all', 'active', 'completed'] as const).map((mode) => {
             const isSelected = filter === mode;
@@ -162,19 +162,22 @@ export default function TasksPage() {
                   ? activeCount
                   : completedCount;
 
+            const shortLabel =
+              mode === 'all' ? 'All' : mode === 'active' ? 'To-Do' : 'Done';
+
             return (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setFilter(mode)}
-                className={`pixel-btn min-h-10 px-2 py-1.5 font-heading text-[9px] uppercase flex items-center justify-center gap-1.5 ${
+                className={`pixel-btn min-h-10 px-1.5 sm:px-2 py-1.5 font-heading text-[8px] sm:text-[9px] uppercase flex items-center justify-center gap-1 min-w-0 ${
                   isSelected
                     ? 'bg-pico-blue text-pico-navy'
                     : 'bg-pico-cream text-pico-navy'
                 }`}
               >
-                <span>{mode}</span>
-                <span className="bg-pico-navy text-pico-cream px-1.5 py-0.5 text-[8px]">
+                <span className="truncate">{shortLabel}</span>
+                <span className="bg-pico-navy text-pico-cream px-1 py-0.5 text-[7px] sm:text-[8px] shrink-0">
                   {count}
                 </span>
               </button>

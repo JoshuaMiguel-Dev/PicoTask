@@ -7,10 +7,10 @@ import PixelCat from './PixelCat';
 const CAT_NAME_STORAGE_KEY = 'pico_cat_name_v1';
 
 const MOOD_BADGES: Record<CatMood, { label: string; bg: string }> = {
-  happy: { label: 'MOOD: HAPPY', bg: 'bg-pico-green text-pico-cream' },
-  neutral: { label: 'MOOD: ALERT', bg: 'bg-pico-blue text-pico-navy' },
-  sleepy: { label: 'MOOD: SLEEPY', bg: 'bg-pico-cream text-pico-navy' },
-  sad: { label: 'MOOD: SAD', bg: 'bg-pico-red text-pico-cream' },
+  happy: { label: 'HAPPY', bg: 'bg-pico-green text-pico-cream' },
+  neutral: { label: 'ALERT', bg: 'bg-pico-blue text-pico-navy' },
+  sleepy: { label: 'SLEEPY', bg: 'bg-pico-cream text-pico-navy' },
+  sad: { label: 'SAD', bg: 'bg-pico-red text-pico-cream' },
 };
 
 /**
