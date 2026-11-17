@@ -14,23 +14,41 @@
   --font-pixel-heading: "Press Start 2P", monospace;
 }
 
-/* PICO-8 Night / Dark Mode Overrides */
+/*
+ * Cozy Midnight Pixel Dark Mode:
+ * - Uses layered warm slate-indigo surfaces (#161925 -> #1F2437 -> #282F47)
+ * - Uses muted steel-indigo structural borders (#414A6B) instead of glaring white lines
+ * - Keeps hard offset shadows deep obsidian (#0A0C14) so cards have natural depth
+ */
+:root {
+  --surface-bg: #FFF1E8;
+  --surface-card: #FFF1E8;
+  --surface-panel: #FFCCAA;
+  --surface-input: #FFFFFF;
+  --ink-primary: #1D2B53;
+  --ink-muted: #5F574F;
+  --border-pixel: #1D2B53;
+  --shadow-pixel: #1D2B53;
+}
+
 html[data-theme="dark"] {
-  --color-pico-cream: #11182B;
-  --color-pico-peach: #1D2B53;
-  --color-pico-navy: #FFF1E8;
-  --color-pico-gray: #C2C3C7;
-}
+  --color-pico-cream: #181C2B;
+  --color-pico-peach: #252B42;
+  --color-pico-navy: #F2ECE1;
+  --color-pico-gray: #9BA3C2;
+  --color-pico-red: #FF2A6D;
+  --color-pico-blue: #38B6FF;
+  --color-pico-green: #10A365;
+  --color-pico-orange: #FFAA1D;
 
-html[data-theme="dark"] .bg-white {
-  background-color: #1A2542 !important;
-  color: #FFF1E8 !important;
-}
-
-html[data-theme="dark"] .pixel-input {
-  background-color: #0B1020;
-  color: #FFF1E8;
-  border-color: #FFF1E8;
+  --surface-bg: #121521;
+  --surface-card: #1D2236;
+  --surface-panel: #262D47;
+  --surface-input: #141826;
+  --ink-primary: #F2ECE1;
+  --ink-muted: #9BA3C2;
+  --border-pixel: #434D70;
+  --shadow-pixel: #090B12;
 }
 
 @layer base {
@@ -60,8 +78,8 @@ html[data-theme="dark"] .pixel-input {
 
   body {
     font-family: var(--font-pixel-body);
-    background-color: var(--color-pico-cream);
-    color: var(--color-pico-navy);
+    background-color: var(--surface-bg);
+    color: var(--ink-primary);
     font-size: 16px;
     line-height: 1.5;
     margin: 0;
@@ -87,20 +105,20 @@ html[data-theme="dark"] .pixel-input {
 }
 
 .pixel-card {
-  background-color: var(--color-pico-cream);
-  border: 3px solid var(--color-pico-navy);
-  box-shadow: 3px 3px 0px var(--color-pico-navy);
+  background-color: var(--surface-card);
+  border: 3px solid var(--border-pixel);
+  box-shadow: 3px 3px 0px var(--shadow-pixel);
 }
 
 .pixel-card-peach {
-  background-color: var(--color-pico-peach);
-  border: 3px solid var(--color-pico-navy);
-  box-shadow: 3px 3px 0px var(--color-pico-navy);
+  background-color: var(--surface-panel);
+  border: 3px solid var(--border-pixel);
+  box-shadow: 3px 3px 0px var(--shadow-pixel);
 }
 
 .pixel-btn {
-  border: 2px solid var(--color-pico-navy);
-  box-shadow: 2px 2px 0px var(--color-pico-navy);
+  border: 2px solid var(--border-pixel);
+  box-shadow: 2px 2px 0px var(--shadow-pixel);
   transition: transform 75ms ease, box-shadow 75ms ease;
   cursor: pointer;
   touch-action: manipulation;
@@ -108,12 +126,12 @@ html[data-theme="dark"] .pixel-input {
 
 .pixel-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0px var(--color-pico-navy);
+  box-shadow: 3px 3px 0px var(--shadow-pixel);
 }
 
 .pixel-btn:active {
   transform: translate(2px, 2px);
-  box-shadow: 0px 0px 0px var(--color-pico-navy);
+  box-shadow: 0px 0px 0px var(--shadow-pixel);
 }
 
 .pixel-btn:focus-visible,
@@ -123,9 +141,35 @@ html[data-theme="dark"] .pixel-input {
 }
 
 .pixel-input {
-  background-color: #FFFFFF;
-  border: 2px solid var(--color-pico-navy);
-  box-shadow: inset 2px 2px 0px rgba(29, 43, 83, 0.15);
+  background-color: var(--surface-input);
+  color: var(--ink-primary);
+  border: 2px solid var(--border-pixel);
+  box-shadow: inset 2px 2px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark Mode Surface & Contrast Refinements */
+html[data-theme="dark"] .border-pico-navy {
+  border-color: var(--border-pixel) !important;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: var(--surface-input) !important;
+  color: var(--ink-primary) !important;
+}
+
+/* Keep dark navy text on bright cyan/orange buttons in dark mode for crisp legibility */
+html[data-theme="dark"] .bg-pico-blue {
+  color: #121521 !important;
+}
+
+html[data-theme="dark"] .bg-pico-orange {
+  color: #121521 !important;
+}
+
+/* Keep solid navy badges (like Streak / Count pills) deep indigo with cream text in dark mode */
+html[data-theme="dark"] .bg-pico-navy {
+  background-color: #0E111B !important;
+  color: #F2ECE1 !important;
 }
 
 /* Custom PICO-8 Internal Scrollbar (Strictly Vertical, No Horizontal Drag) */
@@ -135,7 +179,7 @@ html[data-theme="dark"] .pixel-input {
   touch-action: pan-y;
   overscroll-behavior-y: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-pico-navy) var(--color-pico-peach);
+  scrollbar-color: var(--border-pixel) var(--surface-panel);
 }
 
 .pico-scroll::-webkit-scrollbar {
@@ -143,12 +187,12 @@ html[data-theme="dark"] .pixel-input {
 }
 
 .pico-scroll::-webkit-scrollbar-track {
-  background: var(--color-pico-peach);
-  border-left: 2px solid var(--color-pico-navy);
+  background: var(--surface-panel);
+  border-left: 2px solid var(--border-pixel);
 }
 
 .pico-scroll::-webkit-scrollbar-thumb {
-  background-color: var(--color-pico-navy);
+  background-color: var(--border-pixel);
 }
 
 /* Split-Flap Mechanical Clock Animation */
@@ -227,19 +271,15 @@ html[data-theme="dark"] .pixel-input {
     transform: scaleX(1) scaleY(1) translateY(0);
   }
   20% {
-    /* Squish down under headpat */
     transform: scaleX(1.14) scaleY(0.84) translateY(3px);
   }
   45% {
-    /* Happy spring jump up */
     transform: scaleX(0.94) scaleY(1.08) translateY(-5px) rotate(-3deg);
   }
   65% {
-    /* Little wiggle right */
     transform: scaleX(1.05) scaleY(0.95) translateY(1px) rotate(3deg);
   }
   82% {
-    /* Little hop */
     transform: scaleX(0.98) scaleY(1.03) translateY(-2px) rotate(0deg);
   }
   100% {

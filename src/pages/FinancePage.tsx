@@ -409,24 +409,24 @@ export default function FinancePage() {
               >
                 <XAxis
                   dataKey="category"
-                  stroke="#1D2B53"
-                  tick={{ fill: '#1D2B53', fontSize: 12, fontFamily: 'Pixelify Sans' }}
+                  stroke="var(--border-pixel)"
+                  tick={{ fill: 'var(--ink-primary)', fontSize: 12, fontFamily: 'Pixelify Sans' }}
                 />
                 <YAxis
-                  stroke="#1D2B53"
-                  tick={{ fill: '#1D2B53', fontSize: 12, fontFamily: 'Pixelify Sans' }}
+                  stroke="var(--border-pixel)"
+                  tick={{ fill: 'var(--ink-primary)', fontSize: 12, fontFamily: 'Pixelify Sans' }}
                 />
                 <Tooltip
-                  cursor={{ fill: '#FFCCAA', opacity: 0.4 }}
+                  cursor={{ fill: 'var(--surface-panel)', opacity: 0.4 }}
                   contentStyle={{
-                    backgroundColor: '#FFF1E8',
-                    border: '3px solid #1D2B53',
+                    backgroundColor: 'var(--surface-card)',
+                    border: '3px solid var(--border-pixel)',
                     borderRadius: '0px',
-                    boxShadow: '3px 3px 0px #1D2B53',
+                    boxShadow: '3px 3px 0px var(--shadow-pixel)',
                     fontFamily: 'Pixelify Sans',
                     fontSize: '15px',
                     fontWeight: 700,
-                    color: '#1D2B53',
+                    color: 'var(--ink-primary)',
                   }}
                   formatter={(val: unknown) => [
                     `PHP ${Number(val ?? 0).toLocaleString('en-PH', {
