@@ -11,8 +11,6 @@ import {
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  darkMode: boolean;
-  onToggleDarkMode: () => void;
   isImmersive: boolean;
   onToggleImmersive: () => void;
 }
@@ -50,8 +48,6 @@ export function PixelGearIcon() {
 export default function SettingsModal({
   isOpen,
   onClose,
-  darkMode,
-  onToggleDarkMode,
   isImmersive,
   onToggleImmersive,
 }: SettingsModalProps) {
@@ -96,7 +92,7 @@ export default function SettingsModal({
       role="dialog"
       aria-modal="true"
       aria-label="App Settings"
-      className="fixed inset-0 z-[9999] bg-[#0B1020]/80 p-3 flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] bg-pico-navy/80 p-3 flex items-center justify-center overflow-hidden touch-none"
     >
       <div className="w-full max-w-sm pixel-card-peach p-4 space-y-4 border-4 border-pico-navy">
         {/* Top Modal Header */}
@@ -114,37 +110,13 @@ export default function SettingsModal({
               setConfirmReset(false);
               onClose();
             }}
-            className="pixel-btn px-2.5 py-0.5 bg-pico-red text-[#FFF1E8] font-heading text-[9px] uppercase"
+            className="pixel-btn px-2.5 py-0.5 bg-pico-red text-pico-cream font-heading text-[9px] uppercase"
           >
             X
           </button>
         </div>
 
-        {/* 1. Theme / Dark Mode */}
-        <div className="bg-pico-cream border-2 border-pico-navy p-3 flex items-center justify-between gap-2">
-          <div>
-            <span className="font-heading text-[9px] uppercase text-pico-navy block">
-              Display Theme
-            </span>
-            <span className="text-xs text-pico-gray">
-              {darkMode ? 'Night Console (Dark)' : 'PICO Cream (Light)'}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={onToggleDarkMode}
-            className={`pixel-btn min-h-9 px-3 py-1 font-heading text-[8px] uppercase ${
-              darkMode
-                ? 'bg-pico-blue text-[#1D2B53]'
-                : 'bg-[#1D2B53] text-[#FFF1E8]'
-            }`}
-          >
-            {darkMode ? 'Dark: ON' : 'Dark: OFF'}
-          </button>
-        </div>
-
-        {/* 2. Fullscreen Immersive Mode */}
+        {/* 1. Fullscreen Immersive Mode */}
         <div className="bg-pico-cream border-2 border-pico-navy p-3 flex items-center justify-between gap-2">
           <div>
             <span className="font-heading text-[9px] uppercase text-pico-navy block">
@@ -160,7 +132,7 @@ export default function SettingsModal({
             onClick={onToggleImmersive}
             className={`pixel-btn min-h-9 px-3 py-1 font-heading text-[8px] uppercase ${
               isImmersive
-                ? 'bg-pico-green text-[#FFF1E8]'
+                ? 'bg-pico-green text-pico-cream'
                 : 'bg-pico-peach text-pico-navy'
             }`}
           >
@@ -168,7 +140,7 @@ export default function SettingsModal({
           </button>
         </div>
 
-        {/* 3. OS Notifications */}
+        {/* 2. OS Notifications */}
         <div className="bg-pico-cream border-2 border-pico-navy p-3 flex items-center justify-between gap-2">
           <div>
             <span className="font-heading text-[9px] uppercase text-pico-navy block">
@@ -189,8 +161,8 @@ export default function SettingsModal({
               onClick={() => void handleAlertsClick()}
               className={`pixel-btn min-h-9 px-3 py-1 font-heading text-[8px] uppercase ${
                 notifStatus === 'granted'
-                  ? 'bg-pico-green text-[#FFF1E8]'
-                  : 'bg-pico-blue text-[#1D2B53]'
+                  ? 'bg-pico-green text-pico-cream'
+                  : 'bg-pico-blue text-pico-navy'
               }`}
             >
               {notifStatus === 'granted' ? 'Test Alert' : 'Enable'}
@@ -198,7 +170,7 @@ export default function SettingsModal({
           )}
         </div>
 
-        {/* 4. Reset Account / Wipe All Data */}
+        {/* 3. Reset Account / Wipe All Data */}
         <div className="bg-pico-cream border-2 border-pico-navy p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div>
@@ -214,7 +186,7 @@ export default function SettingsModal({
               <button
                 type="button"
                 onClick={() => setConfirmReset(true)}
-                className="pixel-btn min-h-9 px-3 py-1 bg-pico-red text-[#FFF1E8] font-heading text-[8px] uppercase shrink-0"
+                className="pixel-btn min-h-9 px-3 py-1 bg-pico-red text-pico-cream font-heading text-[8px] uppercase shrink-0"
               >
                 Reset
               </button>
@@ -230,7 +202,7 @@ export default function SettingsModal({
                 <button
                   type="button"
                   onClick={() => void handleResetAccount()}
-                  className="pixel-btn min-h-9 py-1.5 bg-pico-red text-[#FFF1E8] font-heading text-[8px] uppercase"
+                  className="pixel-btn min-h-9 py-1.5 bg-pico-red text-pico-cream font-heading text-[8px] uppercase"
                 >
                   Yes, Wipe All
                 </button>

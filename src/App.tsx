@@ -13,29 +13,17 @@ import AboutPage from './pages/AboutPage';
 
 type NavTab = 'tasks' | 'calendar' | 'clock' | 'finance' | 'about';
 
-const DARK_MODE_STORAGE_KEY = 'pico_dark_mode_v1';
-
 export default function App() {
   const [hasLaunched, setHasLaunched] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<NavTab>('tasks');
   const [isImmersive, setIsImmersive] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem(DARK_MODE_STORAGE_KEY) === 'true';
-  });
   const now = useClock();
 
-  // Apply Dark Mode attribute to <html> whenever `darkMode` changes
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
-    localStorage.setItem(DARK_MODE_STORAGE_KEY, String(darkMode));
-  }, [darkMode]);
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('pico_dark_mode_v1');
 
-  useEffect(() => {
     function handleFsChange() {
       setIsImmersive(Boolean(document.fullscreenElement));
     }
@@ -87,12 +75,10 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 w-full h-dvh overflow-hidden bg-pico-navy/10 flex justify-center">
-      {/* Settings Modal (Dark Mode, Fullscreen, Notifications, Reset Account) */}
+      {/* Settings Modal (Fullscreen, Notifications, Reset Account) */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        darkMode={darkMode}
-        onToggleDarkMode={() => setDarkMode((prev) => !prev)}
         isImmersive={isImmersive}
         onToggleImmersive={() => void toggleImmersiveFullscreen()}
       />
@@ -120,7 +106,7 @@ export default function App() {
                 type="button"
                 onClick={() => setActiveTab('clock')}
                 aria-label="Open full-screen desk clock and focus timer"
-                className="pixel-btn bg-[#1D2B53] text-[#FFF1E8] px-2.5 py-1 font-heading text-[10px] sm:text-xs tabular-nums"
+                className="pixel-btn bg-pico-navy text-pico-cream px-2.5 py-1 font-heading text-[10px] sm:text-xs tabular-nums"
               >
                 {format(now, 'HH:mm:ss')}
               </button>
@@ -130,7 +116,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}
                 aria-label="Open Settings"
-                title="Settings (Dark Mode, Reset Account)"
+                title="Settings (Fullscreen, Notifications, Reset Account)"
                 className="pixel-btn min-w-8 min-h-8 p-1.5 bg-pico-cream text-pico-navy flex items-center justify-center"
               >
                 <PixelGearIcon />
@@ -183,7 +169,7 @@ export default function App() {
                 aria-current={activeTab === tab.id ? 'page' : undefined}
                 className={`pixel-btn min-h-11 px-1 flex items-center justify-center font-heading text-[8px] sm:text-xs uppercase truncate ${
                   activeTab === tab.id
-                    ? 'bg-pico-red text-[#FFF1E8]'
+                    ? 'bg-pico-red text-pico-cream'
                     : 'bg-pico-cream text-pico-navy'
                 }`}
               >
