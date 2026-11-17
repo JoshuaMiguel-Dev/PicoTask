@@ -11,11 +11,6 @@ interface FlipDigitCardProps {
 
 /**
  * Mechanical split-flap digit tile inspired by classic Braun / PICO-8 desk clocks.
- *
- * How the flip animation stays simple:
- * By passing `key={value}` to the inner numeral `<span>`, React replaces that DOM node
- * whenever the number changes (e.g. "41" -> "42"), which automatically triggers our
- * 4-step pixel `animate-flap` CSS keyframe without needing complex duplicate DOM trees.
  */
 export default function FlipDigitCard({
   value,
@@ -25,10 +20,10 @@ export default function FlipDigitCard({
 }: FlipDigitCardProps) {
   const textColor =
     accent === 'red'
-      ? 'text-pico-red'
+      ? 'text-[#FF004D]'
       : accent === 'blue'
-        ? 'text-pico-blue'
-        : 'text-pico-cream';
+        ? 'text-[#29ADFF]'
+        : 'text-[#FFF1E8]';
 
   const boxSizeClasses =
     size === 'fullscreen'
@@ -42,31 +37,31 @@ export default function FlipDigitCard({
 
   return (
     <div className="flex flex-col items-center">
-      {/* Outer Dark Navy Split-Flap Housing */}
+      {/* Outer Dark Navy Split-Flap Housing (Always dark charcoal/navy in both light & dark themes) */}
       <div
-        className={`relative bg-pico-navy border-pico-navy flex items-center justify-center overflow-hidden select-none ${boxSizeClasses}`}
+        className={`relative bg-[#1D2B53] border-pico-navy flex items-center justify-center overflow-hidden select-none ${boxSizeClasses}`}
       >
         {/* Top half subtle light catch */}
         <div
-          className="absolute inset-x-0 top-0 h-1/2 bg-pico-cream/5 pointer-events-none"
+          className="absolute inset-x-0 top-0 h-1/2 bg-white/5 pointer-events-none"
           aria-hidden="true"
         />
 
         {/* Corner pixel rivets */}
         <span
-          className="absolute top-1.5 left-1.5 w-1.5 h-1.5 bg-pico-gray"
+          className="absolute top-1.5 left-1.5 w-1.5 h-1.5 bg-[#5F574F]"
           aria-hidden="true"
         />
         <span
-          className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-pico-gray"
+          className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#5F574F]"
           aria-hidden="true"
         />
         <span
-          className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 bg-pico-gray"
+          className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 bg-[#5F574F]"
           aria-hidden="true"
         />
         <span
-          className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 bg-pico-gray"
+          className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 bg-[#5F574F]"
           aria-hidden="true"
         />
 

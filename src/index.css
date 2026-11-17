@@ -14,6 +14,25 @@
   --font-pixel-heading: "Press Start 2P", monospace;
 }
 
+/* PICO-8 Night / Dark Mode Overrides */
+html[data-theme="dark"] {
+  --color-pico-cream: #11182B;
+  --color-pico-peach: #1D2B53;
+  --color-pico-navy: #FFF1E8;
+  --color-pico-gray: #C2C3C7;
+}
+
+html[data-theme="dark"] .bg-white {
+  background-color: #1A2542 !important;
+  color: #FFF1E8 !important;
+}
+
+html[data-theme="dark"] .pixel-input {
+  background-color: #0B1020;
+  color: #FFF1E8;
+  border-color: #FFF1E8;
+}
+
 @layer base {
   * {
     border-radius: 0px !important;
