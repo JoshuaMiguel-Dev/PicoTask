@@ -12,6 +12,7 @@ import {
   type TimerSoundPreset,
 } from '../utils/soundUtils';
 import FlipDigitCard from '../components/FlipDigitCard';
+import PixelSkyBackdrop from '../components/PixelSkyBackdrop';
 
 type ClockViewMode = 'clock' | 'timer';
 
@@ -290,15 +291,18 @@ export default function ClockPage() {
             className="fixed top-0 left-0 right-0 bottom-0 w-screen h-dvh z-[9999] m-0 bg-[#1D2B53] flex items-center justify-center overflow-hidden"
           >
             <div
-              className={`flex flex-col justify-between p-4 sm:p-8 bg-pico-peach border-4 border-pico-navy box-border ${
+              className={`relative flex flex-col justify-between p-4 sm:p-8 bg-[#0E162E] border-4 border-pico-navy box-border overflow-hidden ${
                 forceRotate90
                   ? 'w-[100dvh] h-[100dvw] rotate-90 shrink-0'
                   : 'w-full h-full'
               }`}
             >
+              {/* Animated Aurora Borealis & Falling Stars Backdrop */}
+              <PixelSkyBackdrop />
+
               {/* Minimal Top Bar */}
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-heading text-xs sm:text-sm text-pico-navy uppercase truncate">
+              <div className="relative z-10 flex items-center justify-between gap-2">
+                <span className="font-heading text-xs sm:text-sm text-[#FFF1E8] uppercase truncate">
                   {viewMode === 'clock'
                     ? format(now, 'EEEE // MMM d').toUpperCase()
                     : `${targetSeconds === null ? 'STOPWATCH' : 'TIMER'} // ${activeSessionBanner}`}
@@ -323,7 +327,7 @@ export default function ClockPage() {
               </div>
 
               {/* Giant Horizontal Split-Flap Cards */}
-              <div className="flex-1 flex items-center justify-center my-2">
+              <div className="relative z-10 flex-1 flex items-center justify-center my-2">
                 <div className="flex items-center justify-center gap-3 sm:gap-6 md:gap-8">
                   <FlipDigitCard
                     size="fullscreen"
@@ -331,8 +335,8 @@ export default function ClockPage() {
                     label="HRS"
                   />
                   <div className="flex flex-col gap-4 pb-6" aria-hidden="true">
-                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-pico-navy" />
-                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-pico-navy" />
+                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-[#FFF1E8]" />
+                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-[#FFF1E8]" />
                   </div>
                   <FlipDigitCard
                     size="fullscreen"
@@ -340,8 +344,8 @@ export default function ClockPage() {
                     label="MIN"
                   />
                   <div className="flex flex-col gap-4 pb-6" aria-hidden="true">
-                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-pico-navy" />
-                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-pico-navy" />
+                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-[#FFF1E8]" />
+                    <span className="w-3 h-3 sm:w-4 sm:h-4 bg-[#FFF1E8]" />
                   </div>
                   <FlipDigitCard
                     size="fullscreen"
@@ -353,7 +357,7 @@ export default function ClockPage() {
               </div>
 
               {/* Minimal Bottom Bar */}
-              <div className="flex items-center justify-between gap-2">
+              <div className="relative z-10 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() =>
@@ -443,74 +447,80 @@ export default function ClockPage() {
           </button>
         </div>
 
-        {/* Centerpiece Split-Flap Housing */}
+        {/* Centerpiece Split-Flap Housing with Animated Aurora & Falling Stars */}
         <section
           aria-label={viewMode === 'clock' ? 'Digital desk clock' : 'Focus timer'}
-          className="pixel-card-peach p-5 sm:p-7 flex flex-col items-center justify-center"
+          className="pixel-card overflow-hidden flex flex-col items-center justify-center"
         >
-          {/* Subtle Top Subtitle */}
-          <div className="w-full flex items-center justify-between gap-2 mb-5">
-            <span className="font-heading text-[9px] sm:text-[10px] text-pico-navy uppercase truncate">
-              {viewMode === 'clock'
-                ? format(now, 'EEEE, MMM d').toUpperCase()
-                : targetSeconds === null
-                  ? `STOPWATCH // ${activeSessionBanner}`
-                  : `TIMER (${formatDurationBadge(targetSeconds)}) // ${activeSessionBanner}`}
-            </span>
+          {/* Upper Night-Sky Display Window (Used by BOTH Clock & Timer) */}
+          <div className="relative w-full p-5 sm:p-7 flex flex-col items-center justify-center overflow-hidden">
+            <PixelSkyBackdrop />
 
-            {viewMode === 'clock' ? (
-              <button
-                type="button"
-                onClick={toggleHourFormat}
-                className="border-2 border-pico-navy bg-pico-cream px-2 py-0.5 font-heading text-[9px] text-pico-navy uppercase cursor-pointer shrink-0"
-              >
-                {use24Hour ? '24H' : amPmStr}
-              </button>
-            ) : (
-              <span
-                className={`border-2 border-pico-navy px-2 py-0.5 font-heading text-[9px] uppercase shrink-0 ${
-                  isRunning
-                    ? 'bg-pico-green text-[#FFF1E8]'
-                    : 'bg-pico-cream text-pico-navy'
-                }`}
-              >
-                {isRunning ? 'RUNNING' : elapsedSeconds > 0 ? 'PAUSED' : 'READY'}
+            {/* Subtle Top Subtitle */}
+            <div className="relative z-10 w-full flex items-center justify-between gap-2 mb-5">
+              <span className="font-heading text-[9px] sm:text-[10px] text-[#FFF1E8] uppercase truncate">
+                {viewMode === 'clock'
+                  ? format(now, 'EEEE, MMM d').toUpperCase()
+                  : targetSeconds === null
+                    ? `STOPWATCH // ${activeSessionBanner}`
+                    : `TIMER (${formatDurationBadge(targetSeconds)}) // ${activeSessionBanner}`}
               </span>
-            )}
-          </div>
 
-          {/* 3-Tile Split-Flap Display */}
-          <div className="flex items-center justify-center gap-2 sm:gap-4 my-2">
-            <FlipDigitCard
-              value={viewMode === 'timer' ? timerDigits.hrs : clockHoursStr}
-              label="HRS"
-            />
-
-            <div className="flex flex-col gap-3 pb-6" aria-hidden="true">
-              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pico-navy" />
-              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pico-navy" />
+              {viewMode === 'clock' ? (
+                <button
+                  type="button"
+                  onClick={toggleHourFormat}
+                  className="border-2 border-pico-navy bg-pico-cream px-2 py-0.5 font-heading text-[9px] text-pico-navy uppercase cursor-pointer shrink-0"
+                >
+                  {use24Hour ? '24H' : amPmStr}
+                </button>
+              ) : (
+                <span
+                  className={`border-2 border-pico-navy px-2 py-0.5 font-heading text-[9px] uppercase shrink-0 ${
+                    isRunning
+                      ? 'bg-pico-green text-[#FFF1E8]'
+                      : 'bg-pico-cream text-pico-navy'
+                  }`}
+                >
+                  {isRunning ? 'RUNNING' : elapsedSeconds > 0 ? 'PAUSED' : 'READY'}
+                </span>
+              )}
             </div>
 
-            <FlipDigitCard
-              value={viewMode === 'timer' ? timerDigits.min : clockMinutesStr}
-              label="MIN"
-            />
+            {/* 3-Tile Split-Flap Display */}
+            <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-4 my-2">
+              <FlipDigitCard
+                value={viewMode === 'timer' ? timerDigits.hrs : clockHoursStr}
+                label="HRS"
+              />
 
-            <div className="flex flex-col gap-3 pb-6" aria-hidden="true">
-              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pico-navy" />
-              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-pico-navy" />
+              <div className="flex flex-col gap-3 pb-6" aria-hidden="true">
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FFF1E8]" />
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FFF1E8]" />
+              </div>
+
+              <FlipDigitCard
+                value={viewMode === 'timer' ? timerDigits.min : clockMinutesStr}
+                label="MIN"
+              />
+
+              <div className="flex flex-col gap-3 pb-6" aria-hidden="true">
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FFF1E8]" />
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#FFF1E8]" />
+              </div>
+
+              <FlipDigitCard
+                value={viewMode === 'timer' ? timerDigits.sec : clockSecondsStr}
+                label="SEC"
+                accent={viewMode === 'timer' && isRunning ? 'red' : 'blue'}
+              />
             </div>
-
-            <FlipDigitCard
-              value={viewMode === 'timer' ? timerDigits.sec : clockSecondsStr}
-              label="SEC"
-              accent={viewMode === 'timer' && isRunning ? 'red' : 'blue'}
-            />
           </div>
 
-          {/* Timer & Stopwatch Session Controls */}
+          {/* Timer & Stopwatch Session Controls (Framed Peach Console Deck Below the Sky) */}
           {viewMode === 'timer' && (
-            <div className="w-full max-w-md mt-6 pt-5 border-t-2 border-pico-navy space-y-4">
+            <div className="w-full bg-pico-peach p-4 sm:p-5 border-t-4 border-pico-navy space-y-4">
+              <div className="max-w-md mx-auto space-y-4">
               {/* 1. What is this Session / Stopwatch for? */}
               <div className="bg-pico-cream border-2 border-pico-navy p-3 space-y-2">
                 <div className="flex items-center justify-between">
@@ -743,6 +753,7 @@ export default function ClockPage() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )}
         </section>
