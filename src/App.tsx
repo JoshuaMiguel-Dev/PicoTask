@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useClock } from './hooks/useClock';
+import { useFocusTimer } from './hooks/useFocusTimer';
 import DeadlineBanner from './components/DeadlineBanner';
+import FloatingTimerOverlay from './components/FloatingTimerOverlay';
 import PwaStatusPill from './components/PwaStatusPill';
 import SettingsModal, { PixelGearIcon } from './components/SettingsModal';
 import StartupScreen from './components/StartupScreen';
@@ -19,6 +21,7 @@ export default function App() {
   const [isImmersive, setIsImmersive] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const now = useClock();
+  const timer = useFocusTimer();
 
   useEffect(() => {
     document.documentElement.removeAttribute('data-theme');
@@ -83,6 +86,16 @@ export default function App() {
         onToggleImmersive={() => void toggleImmersiveFullscreen()}
       />
 
+      {/* Floating Mini-Timer Overlay (Portal to body, visible across all tabs) */}
+      <FloatingTimerOverlay
+        timer={timer}
+        onJumpToClock={() => {
+          timer.setViewMode('timer');
+          setActiveTab('clock');
+        }}
+        onClose={() => timer.setIsOverlayOpen(false)}
+      />
+
       <div className="animate-app-reveal h-full w-full max-w-3xl flex flex-col overflow-hidden bg-pico-cream text-pico-navy border-4 border-pico-navy">
         {/* Locked Top PICO-8 Hardware Console Header */}
         <header className="shrink-0 border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
@@ -101,6 +114,32 @@ export default function App() {
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <PwaStatusPill />
+
+              <button
+                type="button"
+                onClick={timer.toggleOverlay}
+                aria-pressed={timer.isOverlayOpen}
+                aria-label="Toggle floating mini-timer overlay"
+                title={
+                  timer.isOverlayOpen
+                    ? 'Hide floating timer overlay'
+                    : 'Show floating timer overlay'
+                }
+                className={`pixel-btn min-h-8 px-2 py-1 font-heading text-[8px] sm:text-[9px] uppercase flex items-center gap-1 ${
+                  timer.isOverlayOpen
+                    ? 'bg-pico-blue text-pico-navy'
+                    : 'bg-pico-cream text-pico-navy'
+                }`}
+              >
+                {timer.isRunning && !timer.isOverlayOpen && (
+                  <span
+                    aria-hidden="true"
+                    className="w-1.5 h-1.5 bg-pico-green inline-block shrink-0"
+                  />
+                )}
+                <span className="sm:hidden">Pin</span>
+                <span className="hidden sm:inline">Overlay</span>
+              </button>
 
               <button
                 type="button"
@@ -142,7 +181,7 @@ export default function App() {
         >
           {activeTab === 'tasks' && <TasksPage />}
           {activeTab === 'calendar' && <CalendarPage />}
-          {activeTab === 'clock' && <ClockPage />}
+          {activeTab === 'clock' && <ClockPage timer={timer} />}
           {activeTab === 'finance' && <FinancePage />}
           {activeTab === 'about' && <AboutPage />}
         </main>

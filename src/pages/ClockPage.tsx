@@ -2,27 +2,19 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { format, parseISO } from 'date-fns';
-import { addFocusSession, db, deleteFocusSession } from '../db/db';
+import { db, deleteFocusSession } from '../db/db';
 import { useClock } from '../hooks/useClock';
-import { sendOsNotification } from '../utils/notificationUtils';
 import {
-  playTimerAlarm,
-  playUiBlip,
-  stopTimerAlarm,
-  type TimerSoundPreset,
-} from '../utils/soundUtils';
+  formatDurationBadge,
+  SOUND_OPTIONS,
+  splitSecondsToHMS,
+  type FocusTimerState,
+} from '../hooks/useFocusTimer';
 import FlipDigitCard from '../components/FlipDigitCard';
 
-type ClockViewMode = 'clock' | 'timer';
-
-const SOUND_STORAGE_KEY = 'pico_timer_sound_v1';
-
-const SOUND_OPTIONS: { id: TimerSoundPreset; label: string }[] = [
-  { id: 'chiptune', label: 'Chiptune' },
-  { id: 'beep', label: 'Watch Beep' },
-  { id: 'fanfare', label: 'Fanfare' },
-  { id: 'mute', label: 'Mute' },
-];
+interface ClockPageProps {
+  timer: FocusTimerState;
+}
 
 const SESSION_ACTIVITIES = [
   'Study',
@@ -32,99 +24,47 @@ const SESSION_ACTIVITIES = [
   'Workout',
 ] as const;
 
-interface LapSplit {
-  lapNumber: number;
-  atSeconds: number;
-}
-
-function splitSecondsToHMS(totalSeconds: number): {
-  hrs: string;
-  min: string;
-  sec: string;
-} {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const h = Math.floor(safe / 3600);
-  const m = Math.floor((safe % 3600) / 60);
-  const s = safe % 60;
-  return {
-    hrs: String(h).padStart(2, '0'),
-    min: String(m).padStart(2, '0'),
-    sec: String(s).padStart(2, '0'),
-  };
-}
-
-function formatDurationBadge(totalSeconds: number): string {
-  const { hrs, min, sec } = splitSecondsToHMS(totalSeconds);
-  if (hrs !== '00') {
-    return `${hrs}:${min}:${sec}`;
-  }
-  return `${min}:${sec}`;
-}
-
-export default function ClockPage() {
+export default function ClockPage({ timer }: ClockPageProps) {
   const now = useClock();
   const fullscreenOverlayRef = useRef<HTMLDivElement | null>(null);
 
-  const [viewMode, setViewMode] = useState<ClockViewMode>('clock');
+  const {
+    viewMode,
+    setViewMode,
+    isRunning,
+    elapsedSeconds,
+    targetSeconds,
+    displaySeconds,
+    isCompleted,
+    sessionTitle,
+    setSessionTitle,
+    laps,
+    soundPreset,
+    isOverlayOpen,
+    toggleOverlay,
+    toggleRunning,
+    selectPreset,
+    applyCustomDuration,
+    selectSound,
+    addLapSplit,
+    resetTimer,
+    saveSession,
+  } = timer;
 
   // --- FULL SCREEN HORIZONTAL MODE ---
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [forceRotate90, setForceRotate90] = useState<boolean>(false);
 
-  // --- FOCUS TIMER & STOPWATCH SESSION STATE ---
-  const [sessionTitle, setSessionTitle] = useState<string>('Study');
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const [targetSeconds, setTargetSeconds] = useState<number | null>(null);
-  const [laps, setLaps] = useState<LapSplit[]>([]);
+  // --- LOCAL UI DRAWER STATE ---
   const [showHistory, setShowHistory] = useState<boolean>(false);
-
-  // --- CUSTOM TIMER INPUT & SOUND STATE ---
   const [isCustomOpen, setIsCustomOpen] = useState<boolean>(false);
   const [customMinStr, setCustomMinStr] = useState<string>('20');
   const [customSecStr, setCustomSecStr] = useState<string>('00');
-  const [soundPreset, setSoundPreset] = useState<TimerSoundPreset>(() => {
-    const saved = localStorage.getItem(SOUND_STORAGE_KEY);
-    if (
-      saved === 'chiptune' ||
-      saved === 'beep' ||
-      saved === 'fanfare' ||
-      saved === 'mute'
-    ) {
-      return saved;
-    }
-    return 'chiptune';
-  });
 
   // --- WALL CLOCK STATE ---
   const [use24Hour, setUse24Hour] = useState<boolean>(() => {
     return localStorage.getItem('pico_clock_24h') !== 'false';
   });
-
-  const soundPresetRef = useRef(soundPreset);
-  soundPresetRef.current = soundPreset;
-
-  useEffect(() => {
-    if (!isRunning) return;
-
-    const intervalId = window.setInterval(() => {
-      setElapsedSeconds((prev) => {
-        const next = prev + 1;
-        if (targetSeconds !== null && next >= targetSeconds) {
-          setIsRunning(false);
-          playTimerAlarm(soundPresetRef.current, 'alarm');
-          void sendOsNotification('PicoTask // Timer Complete!', {
-            body: `Your ${sessionTitle || 'Focus'} session finished!`,
-            tag: 'pico-timer-complete',
-          });
-          return targetSeconds;
-        }
-        return next;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [isRunning, targetSeconds, sessionTitle]);
 
   useEffect(() => {
     if (!isFullScreen) return;
@@ -200,11 +140,7 @@ export default function ClockPage() {
   }
 
   function handleSelectPreset(minutes: number | null) {
-    stopTimerAlarm();
-    setIsRunning(false);
-    setElapsedSeconds(0);
-    setLaps([]);
-    setTargetSeconds(minutes !== null ? minutes * 60 : null);
+    selectPreset(minutes);
     setIsCustomOpen(false);
   }
 
@@ -213,60 +149,17 @@ export default function ClockPage() {
     const mins = Math.max(0, Number.parseInt(customMinStr || '0', 10) || 0);
     const secs = Math.max(0, Number.parseInt(customSecStr || '0', 10) || 0);
     const total = mins * 60 + secs;
-    if (total <= 0) return;
-
-    stopTimerAlarm();
-    setIsRunning(false);
-    setElapsedSeconds(0);
-    setLaps([]);
-    setTargetSeconds(total);
-    setIsCustomOpen(false);
-    playUiBlip(soundPreset);
-  }
-
-  function handleSelectSound(nextSound: TimerSoundPreset) {
-    setSoundPreset(nextSound);
-    localStorage.setItem(SOUND_STORAGE_KEY, nextSound);
-    playTimerAlarm(nextSound, 'preview');
-  }
-
-  function handleAddLapSplit() {
-    if (elapsedSeconds <= 0) return;
-    playUiBlip(soundPreset);
-    setLaps((prev) => [
-      { lapNumber: prev.length + 1, atSeconds: elapsedSeconds },
-      ...prev,
-    ]);
-  }
-
-  function handleResetTimer() {
-    stopTimerAlarm();
-    setIsRunning(false);
-    setElapsedSeconds(0);
-    setLaps([]);
+    if (applyCustomDuration(total)) {
+      setIsCustomOpen(false);
+    }
   }
 
   async function handleSaveSession() {
-    stopTimerAlarm();
-    if (elapsedSeconds <= 0) return;
-    const baseTitle = sessionTitle.trim() || 'Focus Session';
-    const modeLabel = targetSeconds === null ? 'Stopwatch' : 'Timer';
-    const finalTitle =
-      laps.length > 0
-        ? `${baseTitle} (${modeLabel} • ${laps.length} splits)`
-        : `${baseTitle} (${modeLabel})`;
-
-    await addFocusSession(finalTitle, elapsedSeconds);
-    setIsRunning(false);
-    setElapsedSeconds(0);
-    setLaps([]);
-    setShowHistory(true);
+    const saved = await saveSession();
+    if (saved) {
+      setShowHistory(true);
+    }
   }
-
-  const displaySeconds =
-    targetSeconds !== null
-      ? Math.max(0, targetSeconds - elapsedSeconds)
-      : elapsedSeconds;
 
   const timerDigits = splitSecondsToHMS(displaySeconds);
 
@@ -276,6 +169,13 @@ export default function ClockPage() {
   const amPmStr = format(now, 'aa').toUpperCase();
 
   const activeSessionBanner = (sessionTitle.trim() || 'FOCUS').toUpperCase();
+  const primaryStartLabel = isRunning
+    ? 'Pause'
+    : isCompleted
+      ? 'Restart'
+      : elapsedSeconds > 0
+        ? 'Resume'
+        : 'Start';
 
   return (
     <>
@@ -368,22 +268,19 @@ export default function ClockPage() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        playUiBlip(soundPreset);
-                        setIsRunning((prev) => !prev);
-                      }}
+                      onClick={toggleRunning}
                       className={`pixel-btn min-h-10 px-4 py-1.5 font-heading text-[10px] uppercase ${
                         isRunning
                           ? 'bg-pico-orange text-[#1D2B53]'
                           : 'bg-pico-green text-[#FFF1E8]'
                       }`}
                     >
-                      {isRunning ? 'Pause' : elapsedSeconds > 0 ? 'Resume' : 'Start'}
+                      {primaryStartLabel}
                     </button>
                     {elapsedSeconds > 0 && (
                       <button
                         type="button"
-                        onClick={handleResetTimer}
+                        onClick={resetTimer}
                         className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-cream text-pico-navy font-heading text-[10px] uppercase"
                       >
                         Reset
@@ -471,10 +368,18 @@ export default function ClockPage() {
                 className={`border-2 border-pico-navy px-2 py-0.5 font-heading text-[9px] uppercase shrink-0 ${
                   isRunning
                     ? 'bg-pico-green text-[#FFF1E8]'
-                    : 'bg-pico-cream text-pico-navy'
+                    : isCompleted
+                      ? 'bg-pico-red text-[#FFF1E8]'
+                      : 'bg-pico-cream text-pico-navy'
                 }`}
               >
-                {isRunning ? 'RUNNING' : elapsedSeconds > 0 ? 'PAUSED' : 'READY'}
+                {isRunning
+                  ? 'RUNNING'
+                  : isCompleted
+                    ? 'DONE'
+                    : elapsedSeconds > 0
+                      ? 'PAUSED'
+                      : 'READY'}
               </span>
             )}
           </div>
@@ -658,7 +563,7 @@ export default function ClockPage() {
                         <button
                           key={snd.id}
                           type="button"
-                          onClick={() => handleSelectSound(snd.id)}
+                          onClick={() => selectSound(snd.id)}
                           title="Tap to select and preview alarm sound"
                           className={`border-2 border-pico-navy px-2 py-0.5 font-heading text-[8px] uppercase cursor-pointer ${
                             active
@@ -674,28 +579,25 @@ export default function ClockPage() {
                 </div>
               )}
 
-              {/* 3. Primary Start/Pause, [+ Split / Lap], Save, and Reset Row */}
+              {/* 3. Primary Start/Pause, [+ Split / Lap], Save, Reset, and [Pin] Overlay Row */}
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    playUiBlip(soundPreset);
-                    setIsRunning((prev) => !prev);
-                  }}
+                  onClick={toggleRunning}
                   className={`pixel-btn min-h-11 px-5 py-2 font-heading text-[10px] sm:text-xs uppercase ${
                     isRunning
                       ? 'bg-pico-orange text-[#1D2B53]'
                       : 'bg-pico-green text-[#FFF1E8]'
                   }`}
                 >
-                  {isRunning ? 'Pause' : elapsedSeconds > 0 ? 'Resume' : 'Start'}
+                  {primaryStartLabel}
                 </button>
 
                 {elapsedSeconds > 0 && (
                   <>
                     <button
                       type="button"
-                      onClick={handleAddLapSplit}
+                      onClick={addLapSplit}
                       className="pixel-btn min-h-11 px-3 py-2 bg-pico-blue text-[#1D2B53] font-heading text-[9px] sm:text-[10px] uppercase"
                     >
                       + Split
@@ -711,13 +613,27 @@ export default function ClockPage() {
 
                     <button
                       type="button"
-                      onClick={handleResetTimer}
+                      onClick={resetTimer}
                       className="pixel-btn min-h-11 px-3 py-2 bg-pico-cream text-pico-navy font-heading text-[9px] sm:text-[10px] uppercase"
                     >
                       Reset
                     </button>
                   </>
                 )}
+
+                <button
+                  type="button"
+                  onClick={toggleOverlay}
+                  aria-pressed={isOverlayOpen}
+                  title="Toggle floating mini-timer overlay across all tabs"
+                  className={`pixel-btn min-h-11 px-3 py-2 font-heading text-[9px] sm:text-[10px] uppercase ${
+                    isOverlayOpen
+                      ? 'bg-pico-blue text-[#1D2B53]'
+                      : 'bg-pico-cream text-pico-navy'
+                  }`}
+                >
+                  {isOverlayOpen ? '[Pinned]' : '[Pin]'}
+                </button>
               </div>
 
               {/* 4. Timelapse / Split Checkpoints List (Shown when splits exist) */}
