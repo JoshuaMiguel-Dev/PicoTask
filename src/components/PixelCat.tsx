@@ -48,6 +48,7 @@ interface PixelCatProps {
   size?: 'sm' | 'md' | 'lg';
   isPetted?: boolean;
   isSuperCombo?: boolean;
+  secretPhase?: 'idle' | 'vanishing' | 'gone' | 'returning';
   variant?: CatVariant;
   accessory?: CatAccessory;
 }
@@ -91,6 +92,7 @@ export default function PixelCat({
   size = 'md',
   isPetted = false,
   isSuperCombo = false,
+  secretPhase = 'idle',
   variant = 'gray',
   accessory = 'none',
 }: PixelCatProps) {
@@ -100,13 +102,30 @@ export default function PixelCat({
     lg: 'w-24 h-20',
   }[size];
 
-  const animClass = isSuperCombo
-    ? 'animate-cat-super'
-    : isPetted
-      ? 'animate-cat-pat'
-      : 'transition-transform duration-150';
+  if (secretPhase === 'gone') {
+    return (
+      <div
+        className={`${dimensions} flex items-center justify-center font-heading text-[8px] text-pico-gray select-none`}
+        aria-label="Cat is hiding"
+      >
+        ...
+      </div>
+    );
+  }
 
-  const isActiveReaction = isPetted || isSuperCombo;
+  const animClass =
+    secretPhase === 'vanishing'
+      ? 'animate-cat-vanish'
+      : secretPhase === 'returning'
+        ? 'animate-cat-spin-return'
+        : isSuperCombo
+          ? 'animate-cat-super'
+          : isPetted
+            ? 'animate-cat-pat'
+            : 'transition-transform duration-150';
+
+  const isActiveReaction =
+    isPetted || isSuperCombo || secretPhase === 'returning';
   const colors = PALETTES[variant] ?? PALETTES.gray;
 
   return (

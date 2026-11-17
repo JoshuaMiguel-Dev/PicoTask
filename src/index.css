@@ -294,6 +294,49 @@
   transform-origin: center center;
 }
 
+@keyframes cat-vanish {
+  0% {
+    transform: translateX(0) scaleX(1) scaleY(1);
+    opacity: 1;
+  }
+  30% {
+    transform: translateX(-6px) scaleX(0.85) scaleY(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(75px) scaleX(1.35) scaleY(0.65);
+    opacity: 0;
+  }
+}
+
+@keyframes cat-spin-return {
+  0% {
+    transform: translateY(-45px) scale(0.25) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(3px) scale(1.08) rotate(720deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(720deg);
+    opacity: 1;
+  }
+}
+
+.animate-cat-vanish {
+  animation: cat-vanish 420ms steps(5, end) forwards;
+  transform-origin: center center;
+}
+
+.animate-cat-spin-return {
+  animation: cat-spin-return 850ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin: center center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-flap,
   .animate-power-on,
@@ -302,7 +345,9 @@
   .animate-cat-pat,
   .animate-heart-float,
   .animate-tail-wag,
-  .animate-cat-super {
+  .animate-cat-super,
+  .animate-cat-vanish,
+  .animate-cat-spin-return {
     animation: none;
   }
 }

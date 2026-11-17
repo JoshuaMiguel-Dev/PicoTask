@@ -52,8 +52,8 @@ export default function AboutPage() {
             <p className="text-pico-gray mt-1 text-sm">
               Log assignments and tasks with deadlines. Tasks automatically sort by urgency
               (Overdue, Due &lt;24h, Scheduled). Complete at least <strong>1 task a day</strong> to
-              build your streak and keep your cat happy! Tap <strong>[Style]</strong> to change
-              your cat&apos;s coat and cosmetics, or tap <strong>[Pet]</strong> 5 times for a secret backflip.
+              build your streak and keep your cat happy! Tap <strong>[Style]</strong> to customize
+              your cat&apos;s coat and accessories, or tap <strong>[Pet]</strong> to interact with your companion.
             </p>
           </div>
 

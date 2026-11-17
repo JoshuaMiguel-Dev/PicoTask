@@ -19,7 +19,7 @@ Open **[picotask.vercel.app](https://picotask.vercel.app)** on your phone or des
 
 ## Demo Features
 
-- **`[Tasks]` Deadline Ledger & Streak Cat:** Create, edit, filter, and complete tasks with automatic deadline sorting (`OVERDUE`, `DUE SOON`, `SCHEDULED`, `DONE`) and a custom PICO-8 date/time picker modal. Completing 1 task per day keeps your gray pixel cat happy across 4 moods (`HAPPY`, `ALERT`, `SLEEPY`, `SAD`)—tap `[Pet]` for a bounce animation, or tap 5 times for a 360° backflip!
+- **`[Tasks]` Deadline Ledger & Streak Cat:** Create, edit, filter, and complete tasks with automatic deadline sorting (`OVERDUE`, `DUE SOON`, `SCHEDULED`, `DONE`) and a custom PICO-8 date/time picker modal. Completing 1 task per day keeps your pixel cat happy across 4 moods (`HAPPY`, `ALERT`, `SLEEPY`, `SAD`) with customizable coat styles and accessories.
 - **`[Cal]` Monthly Schedule & Time-Slot Planner:** 7-column month calendar with color-coded task indicators, a tear-off daily date stamp, and 1-tap time-slot scheduling (`[EXAM]`, `[PROJECT]`, `[LAB]`, `[HW]`, `[MEET]`).
 - **`[Clock]` Split-Flap Desk Clock & Focus Timer:** Mechanical split-flap `HRS : MIN : SEC` display with `12H / 24H` clock mode, custom countdown timer (`MIN : SEC`), session logger, 5-second Web Audio 8-bit alarms (`Chiptune`, `Watch Beep`, `Fanfare`), and a Full-Screen Horizontal desk mode.
 - **`[Cash]` Peso (`₱`) Finance Tracker:** Log student allowance and daily expenses with a custom 8-bit pixel Peso (`₱`) glyph and a monthly `Recharts` category bar chart.

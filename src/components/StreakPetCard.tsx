@@ -32,8 +32,13 @@ const MOOD_BADGES: Record<CatMood, { label: string; bg: string }> = {
 export default function StreakPetCard() {
   const [isPetted, setIsPetted] = useState(false);
   const [isSuperCombo, setIsSuperCombo] = useState(false);
+  const [secretPhase, setSecretPhase] = useState<
+    'idle' | 'vanishing' | 'gone' | 'returning'
+  >('idle');
   const [, setPatCount] = useState(0);
   const resetTimerRef = useRef<number | null>(null);
+  const spamTimestampsRef = useRef<number[]>([]);
+  const secretTimersRef = useRef<number[]>([]);
 
   const [catName, setCatName] = useState<string>(() => {
     return localStorage.getItem(CAT_NAME_STORAGE_KEY) || 'MINGMING';
@@ -56,8 +61,41 @@ export default function StreakPetCard() {
   const summary = calculateStreakSummary(allTasks ?? []);
 
   function handlePetCat() {
+    if (secretPhase !== 'idle') return;
+
     if (resetTimerRef.current !== null) {
       window.clearTimeout(resetTimerRef.current);
+    }
+
+    // Track rapid taps within a 4-second window (10 rapid taps triggers the secret vanish + spin return)
+    const nowMs = Date.now();
+    const recentTaps = spamTimestampsRef.current.filter(
+      (t) => nowMs - t < 4000,
+    );
+    recentTaps.push(nowMs);
+    spamTimestampsRef.current = recentTaps;
+
+    if (recentTaps.length >= 10) {
+      spamTimestampsRef.current = [];
+      setIsPetted(false);
+      setIsSuperCombo(false);
+      setSecretPhase('vanishing');
+
+      const t1 = window.setTimeout(() => {
+        setSecretPhase('gone');
+      }, 420);
+
+      const t2 = window.setTimeout(() => {
+        setSecretPhase('returning');
+      }, 2800);
+
+      const t3 = window.setTimeout(() => {
+        setSecretPhase('idle');
+      }, 3650);
+
+      secretTimersRef.current.forEach((id) => window.clearTimeout(id));
+      secretTimersRef.current = [t1, t2, t3];
+      return;
     }
 
     setIsPetted(false);
@@ -277,6 +315,7 @@ export default function StreakPetCard() {
               size="md"
               isPetted={isPetted}
               isSuperCombo={isSuperCombo}
+              secretPhase={secretPhase}
               variant={catVariant}
               accessory={catAccessory}
             />
@@ -290,11 +329,15 @@ export default function StreakPetCard() {
             <div className="bg-pico-cream border-2 border-pico-navy p-2.5 shadow-[2px_2px_0px_#1D2B53] flex-1 flex items-center">
               <p className="text-sm sm:text-base font-bold text-pico-navy leading-snug">
                 &ldquo;
-                {isSuperCombo
-                  ? `*SUPER ZOOMIES!!* ${catName} did a 5-pat backflip!`
-                  : isPetted
-                    ? `Purrrr! ${catName} loves the headpats!`
-                    : summary.statusMessage}
+                {secretPhase === 'vanishing' || secretPhase === 'gone'
+                  ? `*POOF!* ${catName} zoomed away from too many pats...`
+                  : secretPhase === 'returning'
+                    ? `*WHEEEEE!!* ${catName} spun right back in!`
+                    : isSuperCombo
+                      ? `*SUPER ZOOMIES!!* ${catName} did a 5-pat backflip!`
+                      : isPetted
+                        ? `Purrrr! ${catName} loves the headpats!`
+                        : summary.statusMessage}
                 &rdquo;
               </p>
             </div>
