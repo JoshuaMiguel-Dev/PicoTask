@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useClock } from './hooks/useClock';
 import { useFocusTimer } from './hooks/useFocusTimer';
+import { useExternalTimerWindow } from './hooks/useExternalTimerWindow';
 import DeadlineBanner from './components/DeadlineBanner';
 import FloatingTimerOverlay from './components/FloatingTimerOverlay';
 import PwaStatusPill from './components/PwaStatusPill';
@@ -22,6 +23,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const now = useClock();
   const timer = useFocusTimer();
+  const externalTimer = useExternalTimerWindow(timer);
 
   useEffect(() => {
     document.documentElement.removeAttribute('data-theme');
@@ -86,9 +88,10 @@ export default function App() {
         onToggleImmersive={() => void toggleImmersiveFullscreen()}
       />
 
-      {/* Floating Mini-Timer Overlay (Portal to body, visible across all tabs) */}
+      {/* Floating Mini-Timer Overlay (In-App Portal or External PiP/Pop-out outside tab) */}
       <FloatingTimerOverlay
         timer={timer}
+        external={externalTimer}
         onJumpToClock={() => {
           timer.setViewMode('timer');
           setActiveTab('clock');
@@ -181,7 +184,7 @@ export default function App() {
         >
           {activeTab === 'tasks' && <TasksPage />}
           {activeTab === 'calendar' && <CalendarPage />}
-          {activeTab === 'clock' && <ClockPage timer={timer} />}
+          {activeTab === 'clock' && <ClockPage timer={timer} external={externalTimer} />}
           {activeTab === 'finance' && <FinancePage />}
           {activeTab === 'about' && <AboutPage />}
         </main>

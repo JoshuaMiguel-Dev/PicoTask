@@ -70,11 +70,12 @@ export interface FocusTimerState {
   addLapSplit: () => void;
   resetTimer: () => void;
   saveSession: () => Promise<boolean>;
+  syncElapsed: () => void;
 }
 
 /**
- * Lifted timer & stopwatch state hook so active focus timers keep ticking
- * and triggering completion alarms/notifications across all app tabs.
+ * Lifted timer & stopwatch state hook anchored to `Date.now()` timestamps so active
+ * focus timers stay accurate across tab switches, background throttling, and external pop-outs.
  */
 export function useFocusTimer(): FocusTimerState {
   const [viewMode, setViewMode] = useState<ClockViewMode>('clock');
@@ -104,23 +105,47 @@ export function useFocusTimer(): FocusTimerState {
   const sessionTitleRef = useRef(sessionTitle);
   sessionTitleRef.current = sessionTitle;
 
+  const targetSecondsRef = useRef<number | null>(targetSeconds);
+  targetSecondsRef.current = targetSeconds;
+
+  // Timestamp-anchored counters prevent drift if the browser throttles background tabs
+  const baseElapsedRef = useRef<number>(0);
+  const runStartedAtRef = useRef<number | null>(null);
+
+  const computeLiveElapsed = useCallback((): number => {
+    if (runStartedAtRef.current === null) {
+      return baseElapsedRef.current;
+    }
+    const delta = Math.max(0, Math.floor((Date.now() - runStartedAtRef.current) / 1000));
+    const total = baseElapsedRef.current + delta;
+    return targetSecondsRef.current !== null
+      ? Math.min(targetSecondsRef.current, total)
+      : total;
+  }, []);
+
+  const syncElapsed = useCallback(() => {
+    if (runStartedAtRef.current === null) return;
+    const live = computeLiveElapsed();
+    setElapsedSeconds((prev) => (prev === live ? prev : live));
+  }, [computeLiveElapsed]);
+
   useEffect(() => {
     if (!isRunning) return;
 
-    const intervalId = window.setInterval(() => {
-      setElapsedSeconds((prev) => {
-        if (targetSeconds !== null && prev >= targetSeconds) {
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 1000);
+    syncElapsed();
+    const intervalId = window.setInterval(syncElapsed, 250);
+    document.addEventListener('visibilitychange', syncElapsed);
 
-    return () => window.clearInterval(intervalId);
-  }, [isRunning, targetSeconds]);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', syncElapsed);
+    };
+  }, [isRunning, syncElapsed]);
 
   useEffect(() => {
     if (isRunning && targetSeconds !== null && elapsedSeconds >= targetSeconds) {
+      baseElapsedRef.current = targetSeconds;
+      runStartedAtRef.current = null;
       setIsRunning(false);
       playTimerAlarm(soundPresetRef.current, 'alarm');
       void sendOsNotification('PicoTask // Timer Complete!', {
@@ -132,21 +157,36 @@ export function useFocusTimer(): FocusTimerState {
 
   const toggleRunning = useCallback(() => {
     playUiBlip(soundPresetRef.current);
-    if (!isRunning && targetSeconds !== null && elapsedSeconds >= targetSeconds) {
+
+    if (isRunning) {
+      const live = computeLiveElapsed();
+      baseElapsedRef.current = live;
+      runStartedAtRef.current = null;
       stopTimerAlarm();
+      setElapsedSeconds(live);
+      setIsRunning(false);
+      return;
+    }
+
+    if (targetSecondsRef.current !== null && elapsedSeconds >= targetSecondsRef.current) {
+      stopTimerAlarm();
+      baseElapsedRef.current = 0;
+      runStartedAtRef.current = Date.now();
       setElapsedSeconds(0);
       setLaps([]);
       setIsRunning(true);
       return;
     }
-    if (isRunning) {
-      stopTimerAlarm();
-    }
-    setIsRunning((prev) => !prev);
-  }, [isRunning, targetSeconds, elapsedSeconds]);
+
+    baseElapsedRef.current = elapsedSeconds;
+    runStartedAtRef.current = Date.now();
+    setIsRunning(true);
+  }, [isRunning, elapsedSeconds, computeLiveElapsed]);
 
   const selectPreset = useCallback((minutes: number | null) => {
     stopTimerAlarm();
+    baseElapsedRef.current = 0;
+    runStartedAtRef.current = null;
     setIsRunning(false);
     setElapsedSeconds(0);
     setLaps([]);
@@ -156,6 +196,8 @@ export function useFocusTimer(): FocusTimerState {
   const applyCustomDuration = useCallback((totalSeconds: number): boolean => {
     if (totalSeconds <= 0) return false;
     stopTimerAlarm();
+    baseElapsedRef.current = 0;
+    runStartedAtRef.current = null;
     setIsRunning(false);
     setElapsedSeconds(0);
     setLaps([]);
@@ -171,16 +213,19 @@ export function useFocusTimer(): FocusTimerState {
   }, []);
 
   const addLapSplit = useCallback(() => {
-    if (elapsedSeconds <= 0) return;
+    const live = isRunning ? computeLiveElapsed() : elapsedSeconds;
+    if (live <= 0) return;
     playUiBlip(soundPresetRef.current);
     setLaps((prev) => [
-      { lapNumber: prev.length + 1, atSeconds: elapsedSeconds },
+      { lapNumber: prev.length + 1, atSeconds: live },
       ...prev,
     ]);
-  }, [elapsedSeconds]);
+  }, [isRunning, elapsedSeconds, computeLiveElapsed]);
 
   const resetTimer = useCallback(() => {
     stopTimerAlarm();
+    baseElapsedRef.current = 0;
+    runStartedAtRef.current = null;
     setIsRunning(false);
     setElapsedSeconds(0);
     setLaps([]);
@@ -188,7 +233,8 @@ export function useFocusTimer(): FocusTimerState {
 
   const saveSession = useCallback(async (): Promise<boolean> => {
     stopTimerAlarm();
-    if (elapsedSeconds <= 0) return false;
+    const live = isRunning ? computeLiveElapsed() : elapsedSeconds;
+    if (live <= 0) return false;
 
     const baseTitle = sessionTitleRef.current.trim() || 'Focus Session';
     const modeLabel = targetSeconds === null ? 'Stopwatch' : 'Timer';
@@ -197,12 +243,14 @@ export function useFocusTimer(): FocusTimerState {
         ? `${baseTitle} (${modeLabel} • ${laps.length} splits)`
         : `${baseTitle} (${modeLabel})`;
 
-    await addFocusSession(finalTitle, elapsedSeconds);
+    await addFocusSession(finalTitle, live);
+    baseElapsedRef.current = 0;
+    runStartedAtRef.current = null;
     setIsRunning(false);
     setElapsedSeconds(0);
     setLaps([]);
     return true;
-  }, [elapsedSeconds, targetSeconds, laps.length]);
+  }, [isRunning, elapsedSeconds, targetSeconds, laps.length, computeLiveElapsed]);
 
   const toggleOverlay = useCallback(() => {
     playUiBlip(soundPresetRef.current);
@@ -239,5 +287,6 @@ export function useFocusTimer(): FocusTimerState {
     addLapSplit,
     resetTimer,
     saveSession,
+    syncElapsed,
   };
 }

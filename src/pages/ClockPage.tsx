@@ -10,10 +10,12 @@ import {
   splitSecondsToHMS,
   type FocusTimerState,
 } from '../hooks/useFocusTimer';
+import type { ExternalTimerWindowController } from '../hooks/useExternalTimerWindow';
 import FlipDigitCard from '../components/FlipDigitCard';
 
 interface ClockPageProps {
   timer: FocusTimerState;
+  external: ExternalTimerWindowController;
 }
 
 const SESSION_ACTIVITIES = [
@@ -24,7 +26,7 @@ const SESSION_ACTIVITIES = [
   'Workout',
 ] as const;
 
-export default function ClockPage({ timer }: ClockPageProps) {
+export default function ClockPage({ timer, external }: ClockPageProps) {
   const now = useClock();
   const fullscreenOverlayRef = useRef<HTMLDivElement | null>(null);
 
@@ -625,7 +627,7 @@ export default function ClockPage({ timer }: ClockPageProps) {
                   type="button"
                   onClick={toggleOverlay}
                   aria-pressed={isOverlayOpen}
-                  title="Toggle floating mini-timer overlay across all tabs"
+                  title="Toggle in-app floating mini-timer overlay across all tabs"
                   className={`pixel-btn min-h-11 px-3 py-2 font-heading text-[9px] sm:text-[10px] uppercase ${
                     isOverlayOpen
                       ? 'bg-pico-blue text-[#1D2B53]'
@@ -634,7 +636,27 @@ export default function ClockPage({ timer }: ClockPageProps) {
                 >
                   {isOverlayOpen ? '[Pinned]' : '[Pin]'}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => void external.openExternalWindow()}
+                  aria-pressed={external.isExternalOpen}
+                  title="Pop out floating timer window that can be dragged outside this tab or app"
+                  className={`pixel-btn min-h-11 px-3 py-2 font-heading text-[9px] sm:text-[10px] uppercase ${
+                    external.isExternalOpen
+                      ? 'bg-pico-green text-[#FFF1E8]'
+                      : 'bg-pico-peach text-pico-navy'
+                  }`}
+                >
+                  {external.isExternalOpen ? '[Popped]' : '[Pop Out]'}
+                </button>
               </div>
+
+              {external.externalError && (
+                <p className="bg-pico-cream border-2 border-pico-navy px-2.5 py-1.5 text-xs font-bold text-pico-red text-center">
+                  {external.externalError}
+                </p>
+              )}
 
               {/* 4. Timelapse / Split Checkpoints List (Shown when splits exist) */}
               {laps.length > 0 && (
