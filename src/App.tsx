@@ -8,8 +8,9 @@ import TasksPage from './pages/TasksPage';
 import CalendarPage from './pages/CalendarPage';
 import ClockPage from './pages/ClockPage';
 import FinancePage from './pages/FinancePage';
+import AboutPage from './pages/AboutPage';
 
-type NavTab = 'tasks' | 'calendar' | 'clock' | 'finance';
+type NavTab = 'tasks' | 'calendar' | 'clock' | 'finance' | 'about';
 
 export default function App() {
   const [hasLaunched, setHasLaunched] = useState<boolean>(false);
@@ -37,7 +38,7 @@ export default function App() {
     }
   }
 
-  // Keyboard shortcuts: Alt+1 (Tasks), Alt+2 (Calendar), Alt+3 (Clock), Alt+4 (Finance)
+  // Keyboard shortcuts: Alt+1..5
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (!e.altKey) return;
@@ -53,6 +54,9 @@ export default function App() {
       } else if (e.key === '4') {
         e.preventDefault();
         setActiveTab('finance');
+      } else if (e.key === '5') {
+        e.preventDefault();
+        setActiveTab('about');
       }
     }
 
@@ -60,19 +64,12 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Show First-Time Startup Menu or Returning User Boot Loading Screen first
   if (!hasLaunched) {
     return <StartupScreen onFinish={() => setHasLaunched(true)} />;
   }
 
   return (
     <div className="fixed inset-0 w-full h-dvh overflow-hidden bg-pico-navy/10 flex justify-center">
-      {/*
-        Fixed-Frame PICO-8 Console Shell:
-        - Pinned to the screen (`fixed inset-0` wrapper + `overflow-hidden`) so nothing drags horizontally.
-        - Top `<header>` and Bottom `<nav>` are locked (`shrink-0`).
-        - Inner `<main>` only scrolls vertically (`pico-scroll`).
-      */}
       <div className="animate-app-reveal h-full w-full max-w-3xl flex flex-col overflow-hidden bg-pico-cream text-pico-navy border-4 border-pico-navy">
         {/* Locked Top PICO-8 Hardware Console Header */}
         <header className="shrink-0 border-b-4 border-pico-navy bg-pico-peach px-3 sm:px-4 py-2.5">
@@ -113,7 +110,7 @@ export default function App() {
           </div>
         </header>
 
-        {/* Global In-App Deadline Reminder Banner (Locked below header when active) */}
+        {/* Global In-App Deadline Reminder Banner */}
         <div className="shrink-0">
           <DeadlineBanner
             now={now}
@@ -121,7 +118,7 @@ export default function App() {
           />
         </div>
 
-        {/* Dedicated Internal Scrollable Viewport (Strictly vertical scroll, no horizontal drag) */}
+        {/* Dedicated Internal Scrollable Viewport */}
         <main
           key={activeTab}
           id="main-content"
@@ -132,65 +129,38 @@ export default function App() {
           {activeTab === 'calendar' && <CalendarPage />}
           {activeTab === 'clock' && <ClockPage />}
           {activeTab === 'finance' && <FinancePage />}
+          {activeTab === 'about' && <AboutPage />}
         </main>
 
-        {/* Locked Bottom Navigation Bar */}
+        {/* Locked Bottom Navigation Bar (5 Tabs: Tasks, Cal, Clock, Cash, About) */}
         <nav
           aria-label="Primary Bottom Navigation"
           className="shrink-0 w-full bg-pico-peach border-t-4 border-pico-navy z-20"
         >
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2 p-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('tasks')}
-              aria-current={activeTab === 'tasks' ? 'page' : undefined}
-              className={`pixel-btn min-h-11 flex items-center justify-center font-heading text-[9px] sm:text-xs uppercase ${
-                activeTab === 'tasks'
-                  ? 'bg-pico-red text-pico-cream'
-                  : 'bg-pico-cream text-pico-navy'
-              }`}
-            >
-              [Tasks]
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('calendar')}
-              aria-current={activeTab === 'calendar' ? 'page' : undefined}
-              className={`pixel-btn min-h-11 flex items-center justify-center font-heading text-[9px] sm:text-xs uppercase ${
-                activeTab === 'calendar'
-                  ? 'bg-pico-red text-pico-cream'
-                  : 'bg-pico-cream text-pico-navy'
-              }`}
-            >
-              [Cal]
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('clock')}
-              aria-current={activeTab === 'clock' ? 'page' : undefined}
-              className={`pixel-btn min-h-11 flex items-center justify-center font-heading text-[9px] sm:text-xs uppercase ${
-                activeTab === 'clock'
-                  ? 'bg-pico-red text-pico-cream'
-                  : 'bg-pico-cream text-pico-navy'
-              }`}
-            >
-              [Clock]
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('finance')}
-              aria-current={activeTab === 'finance' ? 'page' : undefined}
-              className={`pixel-btn min-h-11 flex items-center justify-center font-heading text-[9px] sm:text-xs uppercase ${
-                activeTab === 'finance'
-                  ? 'bg-pico-red text-pico-cream'
-                  : 'bg-pico-cream text-pico-navy'
-              }`}
-            >
-              [Cash]
-            </button>
+          <div className="grid grid-cols-5 gap-1 sm:gap-2 p-1.5 sm:p-2">
+            {(
+              [
+                { id: 'tasks', label: 'Tasks' },
+                { id: 'calendar', label: 'Cal' },
+                { id: 'clock', label: 'Clock' },
+                { id: 'finance', label: 'Cash' },
+                { id: 'about', label: 'About' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={`pixel-btn min-h-11 px-1 flex items-center justify-center font-heading text-[8px] sm:text-xs uppercase truncate ${
+                  activeTab === tab.id
+                    ? 'bg-pico-red text-pico-cream'
+                    : 'bg-pico-cream text-pico-navy'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </nav>
       </div>

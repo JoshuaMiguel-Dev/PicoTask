@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import PixelCat from './PixelCat';
+import PixelCat, {
+  CAT_ACCESSORIES,
+  CAT_ACCESSORY_STORAGE_KEY,
+  CAT_VARIANTS,
+  CAT_VARIANT_STORAGE_KEY,
+  getSavedCatAccessory,
+  getSavedCatVariant,
+  type CatAccessory,
+  type CatVariant,
+} from './PixelCat';
 
 const ONBOARDED_KEY = 'pico_onboarded_v1';
 const CAT_NAME_STORAGE_KEY = 'pico_cat_name_v1';
@@ -8,18 +17,6 @@ interface StartupScreenProps {
   onFinish: () => void;
 }
 
-/**
- * Handles two distinct startup experiences before entering the main app:
- * 1. First-Time Users (`!pico_onboarded_v1`):
- *    Full PICO-8 Cartridge Title Screen & Startup Menu where the user names their
- *    streak cat companion and presses `[Press Start]`.
- * 2. Returning Users (`pico_onboarded_v1 === 'true'`):
- *    Crisp 8-bit Console Boot / Loading Screen with a segmented pixel progress bar
- *    and their companion cat before entering the workspace.
- *
- * Includes a CRT power-on entrance animation (`animate-power-on`) and a smooth
- * exit curtain transition (`animate-startup-exit`) before unmounting.
- */
 export default function StartupScreen({ onFinish }: StartupScreenProps) {
   const onFinishRef = useRef(onFinish);
   onFinishRef.current = onFinish;
@@ -34,6 +31,12 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
   const [catName, setCatName] = useState<string>(() => {
     return localStorage.getItem(CAT_NAME_STORAGE_KEY) || '';
   });
+  const [catVariant, setCatVariant] = useState<CatVariant>(() =>
+    getSavedCatVariant(),
+  );
+  const [catAccessory, setCatAccessory] = useState<CatAccessory>(() =>
+    getSavedCatAccessory(),
+  );
 
   const [isBooting, setIsBooting] = useState<boolean>(isReturningUser);
   const [bootStep, setBootStep] = useState<number>(0);
@@ -52,12 +55,10 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
       });
     }, 220);
 
-    // Start exit animation right after hitting READY!
     const exitAnimTimer = window.setTimeout(() => {
       setIsExiting(true);
     }, 1050);
 
-    // Complete transition after the exit animation finishes (1050ms + 280ms)
     const finishTimer = window.setTimeout(() => {
       onFinishRef.current();
     }, 1330);
@@ -80,6 +81,8 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
     }
     const finalCatName = (catName.trim() || 'MINGMING').toUpperCase();
     localStorage.setItem(CAT_NAME_STORAGE_KEY, finalCatName);
+    localStorage.setItem(CAT_VARIANT_STORAGE_KEY, catVariant);
+    localStorage.setItem(CAT_ACCESSORY_STORAGE_KEY, catAccessory);
     localStorage.setItem(ONBOARDED_KEY, 'true');
     setCatName(finalCatName);
     setIsBooting(true);
@@ -98,24 +101,12 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
   return (
     <div className="min-h-dvh bg-pico-navy flex items-center justify-center p-4 overflow-hidden">
       <div
-        className={`w-full max-w-md pixel-card-peach p-5 sm:p-7 border-4 border-pico-navy shadow-[6px_6px_0px_#0B1228] text-center space-y-5 ${
+        className={`w-full max-w-md pixel-card-peach p-5 sm:p-6 border-4 border-pico-navy shadow-[6px_6px_0px_#0B1228] text-center space-y-4 ${
           isExiting ? 'animate-startup-exit' : 'animate-power-on'
         }`}
       >
-        {/* Top Cartridge Header Strip */}
-        <div className="flex items-center justify-between border-b-2 border-pico-navy pb-2.5">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-pico-red border border-pico-navy inline-block" />
-            <span className="w-2.5 h-2.5 bg-pico-orange border border-pico-navy inline-block" />
-            <span className="w-2.5 h-2.5 bg-pico-green border border-pico-navy inline-block" />
-          </div>
-          <span className="font-heading text-[8px] text-pico-navy uppercase">
-            CART // PICO-OS v1.0
-          </span>
-        </div>
-
-        {/* Title Banner */}
-        <div className="bg-pico-navy text-pico-cream border-2 border-pico-navy py-4 px-3 space-y-1.5">
+        {/* Title Banner (Removed CART // PICO-OS v1.0 header strip) */}
+        <div className="bg-pico-navy text-pico-cream border-2 border-pico-navy py-3.5 px-3 space-y-1">
           <p className="font-heading text-[8px] text-pico-blue uppercase tracking-widest">
             Personal Desk Companion
           </p>
@@ -124,17 +115,23 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
           </h1>
         </div>
 
-        {/* Center Cat Showcase */}
-        <div className="bg-pico-cream border-2 border-pico-navy p-4 flex flex-col items-center justify-center">
-          <PixelCat mood="happy" size="lg" isPetted />
+        {/* Center Cat Live Preview */}
+        <div className="bg-pico-cream border-2 border-pico-navy p-3.5 flex flex-col items-center justify-center">
+          <PixelCat
+            mood="happy"
+            size="lg"
+            isPetted
+            variant={catVariant}
+            accessory={catAccessory}
+          />
 
           {isBooting ? (
             <p className="mt-2 font-heading text-[9px] uppercase text-pico-navy">
               Companion: {savedCatDisplay}
             </p>
           ) : (
-            <p className="mt-2 text-sm font-bold text-pico-navy">
-              Complete 1 task a day to keep your cat happy & build your streak!
+            <p className="mt-1.5 text-sm font-bold text-pico-navy">
+              Pick your cat&apos;s look & complete 1 task daily to build your streak!
             </p>
           )}
         </div>
@@ -142,7 +139,6 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
         {/* Mode 1: Returning User (or Post-Setup) Loading Screen */}
         {isBooting ? (
           <div className="space-y-3 pt-1" role="status" aria-live="polite">
-            {/* 4-Segment 8-Bit Progress Bar */}
             <div className="bg-pico-cream border-2 border-pico-navy p-1.5 grid grid-cols-4 gap-1.5 h-7">
               {[0, 1, 2, 3].map((idx) => (
                 <div
@@ -159,30 +155,76 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
             </p>
           </div>
         ) : (
-          /* Mode 2: First-Time User Startup Menu */
-          <form onSubmit={handleStartFirstTime} className="space-y-4 text-left">
+          /* Mode 2: First-Time User Startup & Cat Customization Menu */
+          <form onSubmit={handleStartFirstTime} className="space-y-3 text-left">
+            {/* 1. Cat Coat Selector */}
+            <div>
+              <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
+                1. Choose Cat Style:
+              </span>
+              <div className="grid grid-cols-4 gap-1.5">
+                {CAT_VARIANTS.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setCatVariant(v.id)}
+                    className={`pixel-btn py-1.5 font-heading text-[8px] uppercase ${
+                      catVariant === v.id
+                        ? 'bg-pico-blue text-pico-navy'
+                        : 'bg-pico-cream text-pico-navy'
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Cosmetic Accessory Selector */}
+            <div>
+              <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
+                2. Choose Cosmetic:
+              </span>
+              <div className="grid grid-cols-5 gap-1">
+                {CAT_ACCESSORIES.map((acc) => (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    onClick={() => setCatAccessory(acc.id)}
+                    className={`pixel-btn py-1.5 font-heading text-[7px] sm:text-[8px] uppercase ${
+                      catAccessory === acc.id
+                        ? 'bg-pico-green text-pico-cream'
+                        : 'bg-pico-cream text-pico-navy'
+                    }`}
+                  >
+                    {acc.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Cat Name Input */}
             <div>
               <label
                 htmlFor="startup-cat-name"
-                className="block font-heading text-[9px] uppercase text-pico-navy mb-1.5"
+                className="block font-heading text-[8px] uppercase text-pico-navy mb-1"
               >
-                Name Your Streak Cat:
+                3. Name Your Cat:
               </label>
               <input
                 id="startup-cat-name"
                 type="text"
-                autoFocus
                 value={catName}
                 onChange={(e) => setCatName(e.target.value)}
                 placeholder="e.g. Mingming, Mochi, Byte..."
                 maxLength={14}
-                className="pixel-input w-full px-3 py-2.5 text-base text-pico-navy placeholder:text-pico-gray"
+                className="pixel-input w-full px-3 py-2 text-base text-pico-navy placeholder:text-pico-gray"
               />
             </div>
 
             <button
               type="submit"
-              className="pixel-btn w-full min-h-12 py-3 bg-pico-red text-pico-cream font-heading text-xs uppercase"
+              className="pixel-btn w-full min-h-11 py-2.5 bg-pico-red text-pico-cream font-heading text-xs uppercase"
             >
               [Press Start]
             </button>
