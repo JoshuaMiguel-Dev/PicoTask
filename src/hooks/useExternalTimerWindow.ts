@@ -23,10 +23,22 @@ interface CanvasWithCaptureStream extends HTMLCanvasElement {
 export interface ExternalTimerWindowController {
   externalMode: ExternalWindowMode;
   isExternalOpen: boolean;
+  canPopOut: boolean;
   externalContainer: HTMLElement | null;
   externalError: string | null;
   openExternalWindow: () => Promise<boolean>;
   closeExternalWindow: () => void;
+}
+
+function detectMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const narrow = window.innerWidth < 768;
+  const mobileUa =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent || '',
+    );
+  return coarse || narrow || mobileUa;
 }
 
 function copyStylesToDocument(targetDoc: Document): void {
@@ -64,17 +76,17 @@ function drawCanvasTimer(
   const h = canvas.height;
   ctx.imageSmoothingEnabled = false;
 
-  // Outer PICO-8 Peach housing + Navy border
+  // Outer PICO-8 Navy frame + Peach housing
   ctx.fillStyle = '#1D2B53';
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = '#FFCCAA';
-  ctx.fillRect(6, 6, w - 12, h - 12);
+  ctx.fillRect(12, 12, w - 24, h - 24);
 
-  // Top Navy Title Bar
+  // Top Navy Header Bar (part of the card, no browser domain bar)
   ctx.fillStyle = '#1D2B53';
-  ctx.fillRect(6, 6, w - 12, 34);
+  ctx.fillRect(12, 12, w - 24, 76);
 
-  // Status pixel dot
+  // Status pixel square
   const dotColor = timer.isRunning
     ? '#008751'
     : timer.isCompleted
@@ -83,29 +95,29 @@ function drawCanvasTimer(
         ? '#FFA300'
         : '#29ADFF';
   ctx.fillStyle = '#FFF1E8';
-  ctx.fillRect(14, 17, 12, 12);
+  ctx.fillRect(32, 36, 28, 28);
   ctx.fillStyle = dotColor;
-  ctx.fillRect(16, 19, 8, 8);
+  ctx.fillRect(37, 41, 18, 18);
 
   // Session title
   ctx.fillStyle = '#FFF1E8';
-  ctx.font = 'bold 14px "Press Start 2P", monospace';
+  ctx.font = 'bold 30px "Press Start 2P", monospace';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
-  const title = (timer.sessionTitle.trim() || 'FOCUS').toUpperCase().slice(0, 14);
-  ctx.fillText(title, 34, 24);
+  const title = (timer.sessionTitle.trim() || 'FOCUS').toUpperCase().slice(0, 15);
+  ctx.fillText(title, 76, 52);
 
   // Inner Cream Readout Well
   ctx.fillStyle = '#1D2B53';
-  ctx.fillRect(16, 48, w - 32, h - 64);
+  ctx.fillRect(34, 114, w - 68, h - 148);
   ctx.fillStyle = '#FFF1E8';
-  ctx.fillRect(20, 52, w - 40, h - 72);
+  ctx.fillRect(42, 122, w - 84, h - 164);
 
   // Mode + Status Row
   ctx.fillStyle = '#5F574F';
-  ctx.font = 'bold 11px "Press Start 2P", monospace';
+  ctx.font = 'bold 22px "Press Start 2P", monospace';
   ctx.textAlign = 'left';
-  ctx.fillText(timer.targetSeconds === null ? 'STOPWATCH' : 'TIMER', 30, 70);
+  ctx.fillText(timer.targetSeconds === null ? 'STOPWATCH' : 'TIMER', 64, 162);
 
   const statusText = timer.isRunning
     ? 'RUNNING'
@@ -120,22 +132,26 @@ function drawCanvasTimer(
       ? '#008751'
       : '#1D2B53';
   ctx.textAlign = 'right';
-  ctx.fillText(statusText, w - 30, 70);
+  ctx.fillText(statusText, w - 64, 162);
 
   // Giant Digital Readout
   const formatted = formatDurationBadge(timer.displaySeconds);
+  const fontSize = formatted.length > 5 ? 68 : 92;
   ctx.fillStyle = timer.isCompleted ? '#FF004D' : '#1D2B53';
-  ctx.font = 'bold 34px "Press Start 2P", monospace';
+  ctx.font = `bold ${fontSize}px "Press Start 2P", monospace`;
   ctx.textAlign = 'center';
-  ctx.fillText(formatted, w / 2, 120);
+  ctx.fillText(formatted, w / 2, 306);
 }
 
 /**
- * Manages an external OS-level floating timer window that can be dragged outside
- * the browser tab or app window:
- * 1. Document Picture-in-Picture (`window.documentPictureInPicture`) on supported desktop browsers.
- * 2. Detached Pop-out Window (`window.open(..., 'popup=yes')`) on other desktop browsers.
- * 3. Canvas Video Picture-in-Picture (`<video>.requestPictureInPicture()`) on mobile / blocked popups.
+ * Manages an external OS-level floating timer window for desktop users that can
+ * be dragged and resized outside the browser tab or app window:
+ * 1. Clean Canvas Video Picture-in-Picture (`<video>.requestPictureInPicture()`) with
+ *    no browser URL/domain bar and MediaSession Play/Pause support.
+ * 2. Document Picture-in-Picture fallback (`window.documentPictureInPicture`).
+ * 3. Detached Pop-out Window fallback (`window.open(..., 'popup=yes,resizable=yes')`).
+ *
+ * Disabled and hidden automatically on mobile devices/viewports.
  */
 export function useExternalTimerWindow(
   timer: FocusTimerState,
@@ -143,6 +159,7 @@ export function useExternalTimerWindow(
   const [externalMode, setExternalMode] = useState<ExternalWindowMode>('none');
   const [externalContainer, setExternalContainer] = useState<HTMLElement | null>(null);
   const [externalError, setExternalError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(() => detectMobileDevice());
 
   const timerRef = useRef(timer);
   timerRef.current = timer;
@@ -154,11 +171,15 @@ export function useExternalTimerWindow(
   const streamRef = useRef<MediaStream | null>(null);
 
   const cleanupExternalResources = useCallback(() => {
-    if (externalIntervalRef.current !== null && externalWindowRef.current) {
-      try {
-        externalWindowRef.current.clearInterval(externalIntervalRef.current);
-      } catch {
-        // Ignore if window already closed
+    if (externalIntervalRef.current !== null) {
+      if (externalWindowRef.current) {
+        try {
+          externalWindowRef.current.clearInterval(externalIntervalRef.current);
+        } catch {
+          // Ignore if window already closed
+        }
+      } else {
+        window.clearInterval(externalIntervalRef.current);
       }
       externalIntervalRef.current = null;
     }
@@ -196,6 +217,27 @@ export function useExternalTimerWindow(
     setExternalMode('none');
   }, []);
 
+  // Track mobile/coarse-pointer state and close external window if switched to mobile
+  useEffect(() => {
+    const pointerQuery = window.matchMedia('(pointer: coarse)');
+
+    function updateMobileState() {
+      const mobile = detectMobileDevice();
+      setIsMobile(mobile);
+      if (mobile) {
+        cleanupExternalResources();
+      }
+    }
+
+    updateMobileState();
+    window.addEventListener('resize', updateMobileState);
+    pointerQuery.addEventListener('change', updateMobileState);
+    return () => {
+      window.removeEventListener('resize', updateMobileState);
+      pointerQuery.removeEventListener('change', updateMobileState);
+    };
+  }, [cleanupExternalResources]);
+
   // Close external window cleanly when main app closes or reloads
   useEffect(() => {
     function handleMainUnload() {
@@ -210,7 +252,7 @@ export function useExternalTimerWindow(
     };
   }, [cleanupExternalResources]);
 
-  // Redraw canvas whenever timer updates in video-pip mode
+  // Keep canvas refreshed while Video PiP is open
   useEffect(() => {
     if (externalMode !== 'video-pip' || !canvasRef.current) return;
     drawCanvasTimer(canvasRef.current, timerRef.current);
@@ -224,12 +266,19 @@ export function useExternalTimerWindow(
     timer.targetSeconds,
   ]);
 
-  // Bind MediaSession play/pause controls during video-pip mode
+  // Bind MediaSession metadata + play/pause controls during video-pip mode
   useEffect(() => {
     if (externalMode !== 'video-pip' || !('mediaSession' in navigator)) return;
 
     const session = navigator.mediaSession;
     session.playbackState = timer.isRunning ? 'playing' : 'paused';
+
+    if ('MediaMetadata' in window) {
+      session.metadata = new MediaMetadata({
+        title: timer.sessionTitle.trim() || 'Focus Timer',
+        artist: 'PicoTask',
+      });
+    }
 
     const handleToggle = () => {
       timerRef.current.toggleRunning();
@@ -250,7 +299,7 @@ export function useExternalTimerWindow(
         // Ignore
       }
     };
-  }, [externalMode, timer.isRunning]);
+  }, [externalMode, timer.isRunning, timer.sessionTitle]);
 
   const attachToWindow = useCallback(
     (win: Window, mode: 'doc-pip' | 'popup') => {
@@ -302,11 +351,11 @@ export function useExternalTimerWindow(
     }
 
     const canvas = document.createElement('canvas') as CanvasWithCaptureStream;
-    canvas.width = 320;
-    canvas.height = 180;
+    canvas.width = 800;
+    canvas.height = 450;
     drawCanvasTimer(canvas, timerRef.current);
 
-    const stream = canvas.captureStream(4);
+    const stream = canvas.captureStream(10);
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
@@ -324,7 +373,23 @@ export function useExternalTimerWindow(
 
     try {
       await video.play();
+      drawCanvasTimer(canvas, timerRef.current);
       await video.requestPictureInPicture();
+
+      // Keep stream alive & redraw periodically while PiP is active
+      externalIntervalRef.current = window.setInterval(() => {
+        timerRef.current.syncElapsed();
+        if (canvasRef.current) {
+          drawCanvasTimer(canvasRef.current, timerRef.current);
+        }
+      }, 250);
+
+      video.addEventListener('pause', () => {
+        if (document.pictureInPictureElement === video) {
+          void video.play().catch(() => {});
+        }
+      });
+
       video.addEventListener(
         'leavepictureinpicture',
         () => {
@@ -332,6 +397,7 @@ export function useExternalTimerWindow(
         },
         { once: true },
       );
+
       setExternalMode('video-pip');
       setExternalError(null);
       return true;
@@ -344,14 +410,22 @@ export function useExternalTimerWindow(
   const openExternalWindow = useCallback(async (): Promise<boolean> => {
     setExternalError(null);
 
+    if (isMobile) {
+      cleanupExternalResources();
+      return false;
+    }
+
     if (externalMode !== 'none') {
       cleanupExternalResources();
       return false;
     }
 
-    const winWithPiP = window as WindowWithDocPiP;
+    // 1. Clean Video Picture-in-Picture (no browser domain/URL bar, OS-resizable)
+    const videoPipStarted = await openVideoPiP();
+    if (videoPipStarted) return true;
 
-    // 1. Desktop Document Picture-in-Picture (always-on-top interactive window)
+    // 2. Fallback: Document Picture-in-Picture
+    const winWithPiP = window as WindowWithDocPiP;
     if (winWithPiP.documentPictureInPicture?.requestWindow) {
       try {
         const pipWin = await winWithPiP.documentPictureInPicture.requestWindow({
@@ -361,19 +435,11 @@ export function useExternalTimerWindow(
         attachToWindow(pipWin, 'doc-pip');
         return true;
       } catch {
-        // Fall through to popup / video PiP
+        // Fall through to popup
       }
     }
 
-    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-
-    // 2. Mobile fallback: Canvas Video Picture-in-Picture floats over other apps
-    if (isCoarsePointer) {
-      const pipStarted = await openVideoPiP();
-      if (pipStarted) return true;
-    }
-
-    // 3. Desktop fallback (Firefox / Safari): Detached interactive pop-out window
+    // 3. Fallback: Detached pop-out window (Firefox / Safari desktop)
     const popup = window.open(
       '',
       'picotask-floating-timer',
@@ -384,19 +450,22 @@ export function useExternalTimerWindow(
       return true;
     }
 
-    // 4. Last fallback if popup was blocked on desktop
-    const videoPipStarted = await openVideoPiP();
-    if (videoPipStarted) return true;
-
     setExternalError(
-      'Allow pop-ups or Picture-in-Picture to float outside the tab.',
+      'Allow Picture-in-Picture or pop-ups to float outside the tab.',
     );
     return false;
-  }, [attachToWindow, cleanupExternalResources, externalMode, openVideoPiP]);
+  }, [
+    attachToWindow,
+    cleanupExternalResources,
+    externalMode,
+    isMobile,
+    openVideoPiP,
+  ]);
 
   return {
     externalMode,
     isExternalOpen: externalMode !== 'none',
+    canPopOut: !isMobile,
     externalContainer,
     externalError,
     openExternalWindow,

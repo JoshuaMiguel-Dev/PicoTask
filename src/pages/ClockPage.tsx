@@ -637,19 +637,21 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
                   {isOverlayOpen ? '[Pinned]' : '[Pin]'}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => void external.openExternalWindow()}
-                  aria-pressed={external.isExternalOpen}
-                  title="Pop out floating timer window that can be dragged outside this tab or app"
-                  className={`pixel-btn min-h-11 px-3 py-2 font-heading text-[9px] sm:text-[10px] uppercase ${
-                    external.isExternalOpen
-                      ? 'bg-pico-green text-[#FFF1E8]'
-                      : 'bg-pico-peach text-pico-navy'
-                  }`}
-                >
-                  {external.isExternalOpen ? '[Popped]' : '[Pop Out]'}
-                </button>
+                {external.canPopOut && (
+                  <button
+                    type="button"
+                    onClick={() => void external.openExternalWindow()}
+                    aria-pressed={external.isExternalOpen}
+                    title="Pop out floating timer window that can be dragged outside this tab or app"
+                    className={`pixel-btn min-h-11 px-3 py-2 font-heading text-[9px] sm:text-[10px] uppercase ${
+                      external.isExternalOpen
+                        ? 'bg-pico-green text-[#FFF1E8]'
+                        : 'bg-pico-peach text-pico-navy'
+                    }`}
+                  >
+                    {external.isExternalOpen ? '[Popped]' : '[Pop Out]'}
+                  </button>
+                )}
               </div>
 
               {external.externalError && (
