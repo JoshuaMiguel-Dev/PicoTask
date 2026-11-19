@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import type { NewTaskInput, Task } from '../types/task';
 import { getDefaultDeadlineInput } from '../utils/dateUtils';
 import PixelDateTimePicker from './PixelDateTimePicker';
+import PixelTimeSlotPicker from './PixelTimeSlotPicker';
 
 interface TaskFormProps {
   /** If provided, the form operates in "Edit Mode" for this task */
@@ -29,6 +30,20 @@ export default function TaskForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditing = Boolean(initialTask?.id);
+
+  const [deadlineDatePart, deadlineTimePart] = deadline.includes('T')
+    ? deadline.split('T')
+    : [getDefaultDeadlineInput().split('T')[0], '18:00'];
+
+  function handleDateChange(nextDate: string) {
+    setDeadline(`${nextDate}T${deadlineTimePart.slice(0, 5) || '18:00'}`);
+    if (error) setError(null);
+  }
+
+  function handleTimeChange(nextTime: string) {
+    setDeadline(`${deadlineDatePart}T${nextTime}`);
+    if (error) setError(null);
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -111,17 +126,26 @@ export default function TaskForm({
         />
       </div>
 
-      {/* Custom PICO-8 Pixel Deadline Calendar & Time Picker */}
+      {/* Custom PICO-8 Pixel Deadline Date Picker */}
       <div>
         <span className="block font-heading text-[10px] uppercase text-pico-navy mb-1.5">
-          Deadline *
+          Deadline Date *
         </span>
         <PixelDateTimePicker
-          value={deadline}
-          onChange={(nextDeadline) => {
-            setDeadline(nextDeadline);
-            if (error) setError(null);
-          }}
+          value={deadlineDatePart}
+          onChange={handleDateChange}
+          dateOnly
+        />
+      </div>
+
+      {/* PICO-8 Roller Time Picker (1-12 Hour, 00-59 Min, AM/PM) */}
+      <div>
+        <span className="block font-heading text-[10px] uppercase text-pico-navy mb-1.5">
+          Deadline Time *
+        </span>
+        <PixelTimeSlotPicker
+          value={deadlineTimePart.slice(0, 5)}
+          onChange={handleTimeChange}
         />
       </div>
 

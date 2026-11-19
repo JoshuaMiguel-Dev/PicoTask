@@ -57,6 +57,8 @@ export default function DeadlineBanner({ now, onViewTasks }: DeadlineBannerProps
         void sendOsNotification(`Task Overdue: ${task.title}`, {
           body: `Deadline was ${formatDeadlineDisplay(task.deadline)}`,
           tag: `overdue-task-${task.id}`,
+          renotify: true,
+          vibrate: [150, 75, 150],
         });
       }
     }
@@ -101,7 +103,13 @@ export default function DeadlineBanner({ now, onViewTasks }: DeadlineBannerProps
       }`}
     >
       <div className="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <img
+            src="/icon.svg"
+            alt=""
+            aria-hidden="true"
+            className="w-5 h-5 shrink-0 border border-pico-navy bg-pico-cream"
+          />
           <span
             className={`shrink-0 border-2 border-pico-navy px-1.5 py-0.5 font-heading text-[9px] uppercase ${
               hasOverdue

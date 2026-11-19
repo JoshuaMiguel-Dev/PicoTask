@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { useClock } from './hooks/useClock';
 import { useFocusTimer } from './hooks/useFocusTimer';
 import { useExternalTimerWindow } from './hooks/useExternalTimerWindow';
+import { useWakeLock } from './hooks/useWakeLock';
 import DeadlineBanner from './components/DeadlineBanner';
 import FloatingTimerOverlay from './components/FloatingTimerOverlay';
 import PwaStatusPill from './components/PwaStatusPill';
@@ -24,6 +25,7 @@ export default function App() {
   const now = useClock();
   const timer = useFocusTimer();
   const externalTimer = useExternalTimerWindow(timer);
+  useWakeLock(timer.isRunning);
 
   useEffect(() => {
     document.documentElement.removeAttribute('data-theme');
@@ -88,7 +90,7 @@ export default function App() {
         onToggleImmersive={() => void toggleImmersiveFullscreen()}
       />
 
-      {/* Floating Mini-Timer Overlay (In-App Portal or External PiP/Pop-out outside tab) */}
+      {/* External Floating Timer Fallback Portal (Desktop Document PiP / Popup) */}
       <FloatingTimerOverlay
         timer={timer}
         external={externalTimer}
@@ -96,7 +98,6 @@ export default function App() {
           timer.setViewMode('timer');
           setActiveTab('clock');
         }}
-        onClose={() => timer.setIsOverlayOpen(false)}
       />
 
       <div className="animate-app-reveal h-full w-full max-w-3xl flex flex-col overflow-hidden bg-pico-cream text-pico-navy border-4 border-pico-navy">
@@ -120,32 +121,6 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={timer.toggleOverlay}
-                aria-pressed={timer.isOverlayOpen}
-                aria-label="Toggle floating mini-timer overlay"
-                title={
-                  timer.isOverlayOpen
-                    ? 'Hide floating timer overlay'
-                    : 'Show floating timer overlay'
-                }
-                className={`pixel-btn min-h-8 px-2 py-1 font-heading text-[8px] sm:text-[9px] uppercase flex items-center gap-1 ${
-                  timer.isOverlayOpen
-                    ? 'bg-pico-blue text-pico-navy'
-                    : 'bg-pico-cream text-pico-navy'
-                }`}
-              >
-                {timer.isRunning && !timer.isOverlayOpen && (
-                  <span
-                    aria-hidden="true"
-                    className="w-1.5 h-1.5 bg-pico-green inline-block shrink-0"
-                  />
-                )}
-                <span className="sm:hidden">Pin</span>
-                <span className="hidden sm:inline">Overlay</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setActiveTab('clock')}
                 aria-label="Open full-screen desk clock and focus timer"
                 className="pixel-btn bg-pico-navy text-pico-cream px-2.5 py-1 font-heading text-[10px] sm:text-xs tabular-nums"
@@ -166,6 +141,61 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {/* In-App Timer Complete Alert Banner (works even without OS permission) */}
+        {timer.completionNotice && (
+          <aside
+            role="alert"
+            aria-live="assertive"
+            className="shrink-0 border-b-4 border-pico-navy bg-pico-green text-pico-cream px-3 sm:px-4 py-2"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <img
+                  src="/icon.svg"
+                  alt=""
+                  aria-hidden="true"
+                  className="w-5 h-5 shrink-0 border border-pico-navy bg-pico-cream"
+                />
+                <span className="shrink-0 border-2 border-pico-navy bg-pico-cream text-pico-navy px-1.5 py-0.5 font-heading text-[8px] uppercase">
+                  Done
+                </span>
+                <p className="text-sm sm:text-base font-bold truncate">
+                  {timer.completionNotice}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void timer.saveSession()}
+                  className="pixel-btn min-h-8 px-2.5 py-1 bg-pico-red text-pico-cream font-heading text-[8px] uppercase"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    timer.dismissCompletionNotice();
+                    timer.setViewMode('timer');
+                    setActiveTab('clock');
+                  }}
+                  className="pixel-btn min-h-8 px-2.5 py-1 bg-pico-cream text-pico-navy font-heading text-[8px] uppercase"
+                >
+                  Clock
+                </button>
+                <button
+                  type="button"
+                  aria-label="Dismiss timer alert"
+                  onClick={timer.dismissCompletionNotice}
+                  className="pixel-btn min-h-8 px-2 py-1 bg-pico-peach text-pico-navy font-heading text-[8px] uppercase"
+                >
+                  X
+                </button>
+              </div>
+            </div>
+          </aside>
+        )}
 
         {/* Global In-App Deadline Reminder Banner */}
         <div className="shrink-0">

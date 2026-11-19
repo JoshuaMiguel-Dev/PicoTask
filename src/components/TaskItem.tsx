@@ -6,6 +6,7 @@ interface TaskItemProps {
   onToggleComplete: (task: Task) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onDeleteSeries?: (repeatGroupId: string) => void;
 }
 
 export default function TaskItem({
@@ -13,6 +14,7 @@ export default function TaskItem({
   onToggleComplete,
   onEdit,
   onDelete,
+  onDeleteSeries,
 }: TaskItemProps) {
   const urgency = getTaskUrgency(task);
 
@@ -80,6 +82,14 @@ export default function TaskItem({
               <span className="inline-block bg-pico-cream border-2 border-pico-navy px-1.5 py-0.5 font-heading text-[9px] text-pico-navy tabular-nums">
                 {formatDeadlineDisplay(task.deadline)}
               </span>
+              {task.repeatLabel && (
+                <span
+                  title={`Repeating schedule: ${task.repeatLabel}`}
+                  className="inline-block bg-pico-blue border-2 border-pico-navy px-1.5 py-0.5 font-heading text-[8px] text-pico-navy uppercase"
+                >
+                  ↻ {task.repeatLabel}
+                </span>
+              )}
             </div>
 
             <h3
@@ -98,8 +108,8 @@ export default function TaskItem({
           </div>
         </div>
 
-        {/* Bottom Action Row: Edit & Delete */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t-2 border-pico-navy/20">
+        {/* Bottom Action Row: Edit, Delete & Optional Delete Series */}
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t-2 border-pico-navy/20">
           <button
             type="button"
             onClick={() => onEdit(task)}
@@ -107,6 +117,16 @@ export default function TaskItem({
           >
             Edit
           </button>
+          {task.repeatGroupId && onDeleteSeries && (
+            <button
+              type="button"
+              onClick={() => onDeleteSeries(task.repeatGroupId!)}
+              title="Delete all occurrences in this repeating schedule"
+              className="pixel-btn min-h-10 px-2.5 py-1.5 bg-pico-orange text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase"
+            >
+              Del Series
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onDelete(task)}

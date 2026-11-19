@@ -76,15 +76,15 @@ function drawCanvasTimer(
   const h = canvas.height;
   ctx.imageSmoothingEnabled = false;
 
-  // Outer PICO-8 Navy frame + Peach housing
+  // Outer PICO-8 Navy frame + Peach housing (crisp 580x360 compact 1.61:1 canvas)
   ctx.fillStyle = '#1D2B53';
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = '#FFCCAA';
-  ctx.fillRect(12, 12, w - 24, h - 24);
+  ctx.fillRect(8, 8, w - 16, h - 16);
 
-  // Top Navy Header Bar (part of the card, no browser domain bar)
+  // Top Navy Header Bar (no browser domain bar)
   ctx.fillStyle = '#1D2B53';
-  ctx.fillRect(12, 12, w - 24, 76);
+  ctx.fillRect(8, 8, w - 16, 54);
 
   // Status pixel square
   const dotColor = timer.isRunning
@@ -95,29 +95,29 @@ function drawCanvasTimer(
         ? '#FFA300'
         : '#29ADFF';
   ctx.fillStyle = '#FFF1E8';
-  ctx.fillRect(32, 36, 28, 28);
+  ctx.fillRect(22, 25, 20, 20);
   ctx.fillStyle = dotColor;
-  ctx.fillRect(37, 41, 18, 18);
+  ctx.fillRect(26, 29, 12, 12);
 
   // Session title
   ctx.fillStyle = '#FFF1E8';
-  ctx.font = 'bold 30px "Press Start 2P", monospace';
+  ctx.font = 'bold 20px "Press Start 2P", monospace';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
-  const title = (timer.sessionTitle.trim() || 'FOCUS').toUpperCase().slice(0, 15);
-  ctx.fillText(title, 76, 52);
+  const title = (timer.sessionTitle.trim() || 'FOCUS').toUpperCase().slice(0, 14);
+  ctx.fillText(title, 52, 36);
 
   // Inner Cream Readout Well
   ctx.fillStyle = '#1D2B53';
-  ctx.fillRect(34, 114, w - 68, h - 148);
+  ctx.fillRect(20, 74, w - 40, h - 94);
   ctx.fillStyle = '#FFF1E8';
-  ctx.fillRect(42, 122, w - 84, h - 164);
+  ctx.fillRect(26, 80, w - 52, h - 106);
 
   // Mode + Status Row
   ctx.fillStyle = '#5F574F';
-  ctx.font = 'bold 22px "Press Start 2P", monospace';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
   ctx.textAlign = 'left';
-  ctx.fillText(timer.targetSeconds === null ? 'STOPWATCH' : 'TIMER', 64, 162);
+  ctx.fillText(timer.targetSeconds === null ? 'STOPWATCH' : 'TIMER', 42, 110);
 
   const statusText = timer.isRunning
     ? 'RUNNING'
@@ -132,15 +132,50 @@ function drawCanvasTimer(
       ? '#008751'
       : '#1D2B53';
   ctx.textAlign = 'right';
-  ctx.fillText(statusText, w - 64, 162);
+  ctx.fillText(statusText, w - 42, 110);
 
-  // Giant Digital Readout
+  // Digital Readout + Final-10s Alert Color
   const formatted = formatDurationBadge(timer.displaySeconds);
-  const fontSize = formatted.length > 5 ? 68 : 92;
-  ctx.fillStyle = timer.isCompleted ? '#FF004D' : '#1D2B53';
+  const fontSize = formatted.length > 5 ? 54 : 78;
+  const isFinalCountdown =
+    timer.targetSeconds !== null &&
+    timer.isRunning &&
+    timer.displaySeconds > 0 &&
+    timer.displaySeconds <= 10;
+  const hasProgressBar = timer.targetSeconds !== null && timer.targetSeconds > 0;
+
+  ctx.fillStyle = timer.isCompleted || isFinalCountdown ? '#FF004D' : '#1D2B53';
   ctx.font = `bold ${fontSize}px "Press Start 2P", monospace`;
   ctx.textAlign = 'center';
-  ctx.fillText(formatted, w / 2, 306);
+  ctx.fillText(formatted, w / 2, hasProgressBar ? 206 : 222);
+
+  // 8-Bit Countdown Progress Bar inside Cream Readout Well
+  if (hasProgressBar && timer.targetSeconds !== null) {
+    const remainingRatio = Math.max(
+      0,
+      Math.min(1, timer.displaySeconds / timer.targetSeconds),
+    );
+    const barX = 42;
+    const barY = 296;
+    const barW = w - 84;
+    const barH = 18;
+
+    ctx.fillStyle = '#1D2B53';
+    ctx.fillRect(barX, barY, barW, barH);
+    ctx.fillStyle = '#FFCCAA';
+    ctx.fillRect(barX + 3, barY + 3, barW - 6, barH - 6);
+
+    const fillW = Math.round((barW - 6) * remainingRatio);
+    if (fillW > 0) {
+      ctx.fillStyle =
+        isFinalCountdown || timer.isCompleted
+          ? '#FF004D'
+          : remainingRatio <= 0.25
+            ? '#FFA300'
+            : '#008751';
+      ctx.fillRect(barX + 3, barY + 3, fillW, barH - 6);
+    }
+  }
 }
 
 /**
@@ -351,8 +386,8 @@ export function useExternalTimerWindow(
     }
 
     const canvas = document.createElement('canvas') as CanvasWithCaptureStream;
-    canvas.width = 800;
-    canvas.height = 450;
+    canvas.width = 580;
+    canvas.height = 360;
     drawCanvasTimer(canvas, timerRef.current);
 
     const stream = canvas.captureStream(10);
@@ -429,8 +464,8 @@ export function useExternalTimerWindow(
     if (winWithPiP.documentPictureInPicture?.requestWindow) {
       try {
         const pipWin = await winWithPiP.documentPictureInPicture.requestWindow({
-          width: 256,
-          height: 158,
+          width: 180,
+          height: 112,
         });
         attachToWindow(pipWin, 'doc-pip');
         return true;
@@ -443,7 +478,7 @@ export function useExternalTimerWindow(
     const popup = window.open(
       '',
       'picotask-floating-timer',
-      'popup=yes,width=264,height=172,left=80,top=80,resizable=yes',
+      'popup=yes,width=188,height=120,left=80,top=80,resizable=yes',
     );
     if (popup) {
       attachToWindow(popup, 'popup');

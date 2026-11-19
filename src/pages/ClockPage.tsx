@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { format, parseISO } from 'date-fns';
 import { db, deleteFocusSession } from '../db/db';
 import { useClock } from '../hooks/useClock';
+import { useWakeLock } from '../hooks/useWakeLock';
 import {
   formatDurationBadge,
   SOUND_OPTIONS,
@@ -42,8 +43,6 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
     setSessionTitle,
     laps,
     soundPreset,
-    isOverlayOpen,
-    toggleOverlay,
     toggleRunning,
     selectPreset,
     applyCustomDuration,
@@ -56,6 +55,7 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
   // --- FULL SCREEN HORIZONTAL MODE ---
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const [forceRotate90, setForceRotate90] = useState<boolean>(false);
+  useWakeLock(isFullScreen);
 
   // --- LOCAL UI DRAWER STATE ---
   const [showHistory, setShowHistory] = useState<boolean>(false);
@@ -622,20 +622,6 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
                     </button>
                   </>
                 )}
-
-                <button
-                  type="button"
-                  onClick={toggleOverlay}
-                  aria-pressed={isOverlayOpen}
-                  title="Toggle in-app floating mini-timer overlay across all tabs"
-                  className={`pixel-btn min-h-11 px-3 py-2 font-heading text-[9px] sm:text-[10px] uppercase ${
-                    isOverlayOpen
-                      ? 'bg-pico-blue text-[#1D2B53]'
-                      : 'bg-pico-cream text-pico-navy'
-                  }`}
-                >
-                  {isOverlayOpen ? '[Pinned]' : '[Pin]'}
-                </button>
 
                 {external.canPopOut && (
                   <button

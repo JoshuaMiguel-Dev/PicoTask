@@ -1,4 +1,9 @@
 /**
+ * Recurrence pattern for Notion-style repeated calendar schedules.
+ */
+export type TaskRepeatRule = 'none' | 'daily' | 'weekdays' | 'weekly' | 'monthly';
+
+/**
  * Represents a single task stored in IndexedDB via Dexie.
  *
  * Why strings for dates?
@@ -21,13 +26,22 @@ export interface Task {
   createdAt: string;
   /** ISO timestamp when the task was last marked complete (used in Phase 2 for streaks) */
   completedAt?: string;
+  /** Optional recurrence pattern for repeated calendar schedules */
+  repeatRule?: Exclude<TaskRepeatRule, 'none'>;
+  /** Shared ID linking all occurrences created from the same repeating schedule */
+  repeatGroupId?: string;
+  /** Short human-readable repeat summary, e.g. "Daily", "Mon/Wed/Fri", "Monthly" */
+  repeatLabel?: string;
 }
 
 /**
  * Shape required when creating a new task from the UI form.
  * `id`, `completed`, and `createdAt` are handled automatically by the database helper.
  */
-export type NewTaskInput = Pick<Task, 'title' | 'notes' | 'deadline'>;
+export type NewTaskInput = Pick<
+  Task,
+  'title' | 'notes' | 'deadline' | 'repeatRule' | 'repeatGroupId' | 'repeatLabel'
+>;
 
 /**
  * Shape allowed when editing an existing task's fields.

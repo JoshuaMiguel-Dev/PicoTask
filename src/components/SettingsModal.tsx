@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { db } from '../db/db';
 import {
@@ -55,22 +55,42 @@ export default function SettingsModal({
   const [notifStatus, setNotifStatus] = useState<NotificationStatus>(() =>
     getNotificationStatus(),
   );
+  const [notifFeedback, setNotifFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setNotifStatus(getNotificationStatus());
+    setNotifFeedback(null);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   async function handleAlertsClick() {
+    setNotifFeedback(null);
     if (notifStatus === 'default') {
       const next = await requestOsNotificationPermission();
       setNotifStatus(next);
       if (next === 'granted') {
         await sendOsNotification('PicoTask // Alerts Enabled', {
-          body: 'OS notifications are now active.',
+          body: 'OS notifications are now active for timers and overdue tasks.',
+          tag: 'pico-alerts-enabled',
+          vibrate: [120, 60, 120],
         });
+        setNotifFeedback('Alerts enabled! Sent a welcome notification.');
+      } else if (next === 'denied') {
+        setNotifFeedback('Blocked in browser settings.');
       }
     } else if (notifStatus === 'granted') {
-      await sendOsNotification('PicoTask // Test Alert', {
-        body: 'Your notifications are working!',
+      const ok = await sendOsNotification('PicoTask // Test Alert', {
+        body: 'Your notifications are working! Click to return to PicoTask.',
+        tag: `pico-test-${Date.now()}`,
+        vibrate: [120, 60, 120],
       });
+      setNotifFeedback(
+        ok
+          ? 'Test alert sent! Check your system banner.'
+          : 'Could not send alert. Check OS notification settings.',
+      );
     }
   }
 
@@ -141,32 +161,44 @@ export default function SettingsModal({
         </div>
 
         {/* 2. OS Notifications */}
-        <div className="bg-pico-cream border-2 border-pico-navy p-3 flex items-center justify-between gap-2">
-          <div>
-            <span className="font-heading text-[9px] uppercase text-pico-navy block">
-              OS Notifications
-            </span>
-            <span className="text-xs text-pico-gray">
-              {notifStatus === 'granted'
-                ? 'Active (tap to test)'
-                : notifStatus === 'denied'
-                  ? 'Blocked in browser'
-                  : 'Deadline & timer alerts'}
-            </span>
+        <div className="bg-pico-cream border-2 border-pico-navy p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <span className="font-heading text-[9px] uppercase text-pico-navy block">
+                OS Notifications
+              </span>
+              <span className="text-xs text-pico-gray">
+                {notifStatus === 'granted'
+                  ? 'Active (tap to test)'
+                  : notifStatus === 'denied'
+                    ? 'Blocked in browser settings'
+                    : notifStatus === 'ios-needs-install'
+                      ? 'Add to Home Screen on iOS first'
+                      : notifStatus === 'unsupported'
+                        ? 'Not supported in this browser'
+                        : 'Deadline & timer alerts'}
+              </span>
+            </div>
+
+            {(notifStatus === 'default' || notifStatus === 'granted') && (
+              <button
+                type="button"
+                onClick={() => void handleAlertsClick()}
+                className={`pixel-btn min-h-9 px-3 py-1 font-heading text-[8px] uppercase shrink-0 ${
+                  notifStatus === 'granted'
+                    ? 'bg-pico-green text-pico-cream'
+                    : 'bg-pico-blue text-pico-navy'
+                }`}
+              >
+                {notifStatus === 'granted' ? 'Test Alert' : 'Enable'}
+              </button>
+            )}
           </div>
 
-          {(notifStatus === 'default' || notifStatus === 'granted') && (
-            <button
-              type="button"
-              onClick={() => void handleAlertsClick()}
-              className={`pixel-btn min-h-9 px-3 py-1 font-heading text-[8px] uppercase ${
-                notifStatus === 'granted'
-                  ? 'bg-pico-green text-pico-cream'
-                  : 'bg-pico-blue text-pico-navy'
-              }`}
-            >
-              {notifStatus === 'granted' ? 'Test Alert' : 'Enable'}
-            </button>
+          {notifFeedback && (
+            <p className="text-xs font-bold text-pico-navy border-t border-pico-navy/20 pt-1.5">
+              &gt; {notifFeedback}
+            </p>
           )}
         </div>
 

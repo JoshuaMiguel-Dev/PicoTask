@@ -33,6 +33,12 @@ class PicoTaskDB extends Dexie {
       sessions: '++id, completedAt',
       transactions: '++id, type, category, date, createdAt',
     });
+
+    this.version(4).stores({
+      tasks: '++id, deadline, completed, createdAt, repeatGroupId',
+      sessions: '++id, completedAt',
+      transactions: '++id, type, category, date, createdAt',
+    });
   }
 }
 
@@ -49,7 +55,30 @@ export async function addTask(input: NewTaskInput): Promise<number | undefined> 
     deadline: input.deadline,
     completed: false,
     createdAt: nowIso,
+    repeatRule: input.repeatRule,
+    repeatGroupId: input.repeatGroupId,
+    repeatLabel: input.repeatLabel,
   });
+}
+
+/**
+ * Adds a batch of repeated schedule occurrences to IndexedDB in a single transaction.
+ */
+export async function addRepeatedTasks(inputs: NewTaskInput[]): Promise<void> {
+  if (inputs.length === 0) return;
+  const nowIso = new Date().toISOString();
+  await db.tasks.bulkAdd(
+    inputs.map((input) => ({
+      title: input.title.trim(),
+      notes: input.notes.trim(),
+      deadline: input.deadline,
+      completed: false,
+      createdAt: nowIso,
+      repeatRule: input.repeatRule,
+      repeatGroupId: input.repeatGroupId,
+      repeatLabel: input.repeatLabel,
+    })),
+  );
 }
 
 /**
@@ -86,6 +115,13 @@ export async function toggleTaskCompletion(id: number, currentCompleted: boolean
  */
 export async function deleteTask(id: number): Promise<void> {
   await db.tasks.delete(id);
+}
+
+/**
+ * Deletes every task occurrence belonging to a repeating schedule series.
+ */
+export async function deleteTaskSeries(repeatGroupId: string): Promise<number> {
+  return db.tasks.where('repeatGroupId').equals(repeatGroupId).delete();
 }
 
 /**

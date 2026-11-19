@@ -16,6 +16,7 @@ export interface LapSplit {
 }
 
 export const SOUND_STORAGE_KEY = 'pico_timer_sound_v1';
+export const TIMER_STORAGE_KEY = 'pico_timer_state_v1';
 
 export const SOUND_OPTIONS: { id: TimerSoundPreset; label: string }[] = [
   { id: 'chiptune', label: 'Chiptune' },
@@ -48,6 +49,123 @@ export function formatDurationBadge(totalSeconds: number): string {
   return `${min}:${sec}`;
 }
 
+interface PersistedTimerState {
+  viewMode: ClockViewMode;
+  sessionTitle: string;
+  isRunning: boolean;
+  baseElapsed: number;
+  runStartedAt: number | null;
+  targetSeconds: number | null;
+  laps: LapSplit[];
+}
+
+interface InitialTimerSnapshot {
+  viewMode: ClockViewMode;
+  sessionTitle: string;
+  isRunning: boolean;
+  elapsedSeconds: number;
+  baseElapsed: number;
+  runStartedAt: number | null;
+  targetSeconds: number | null;
+  laps: LapSplit[];
+}
+
+function loadInitialTimerSnapshot(): InitialTimerSnapshot {
+  const fallback: InitialTimerSnapshot = {
+    viewMode: 'clock',
+    sessionTitle: 'Study',
+    isRunning: false,
+    elapsedSeconds: 0,
+    baseElapsed: 0,
+    runStartedAt: null,
+    targetSeconds: null,
+    laps: [],
+  };
+
+  try {
+    const raw = localStorage.getItem(TIMER_STORAGE_KEY);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as Partial<PersistedTimerState>;
+
+    const viewMode: ClockViewMode =
+      parsed.viewMode === 'timer' || parsed.viewMode === 'clock'
+        ? parsed.viewMode
+        : 'clock';
+    const sessionTitle =
+      typeof parsed.sessionTitle === 'string' ? parsed.sessionTitle.slice(0, 60) : 'Study';
+    const targetSeconds =
+      typeof parsed.targetSeconds === 'number' &&
+      Number.isFinite(parsed.targetSeconds) &&
+      parsed.targetSeconds > 0
+        ? Math.floor(parsed.targetSeconds)
+        : null;
+    const baseElapsed =
+      typeof parsed.baseElapsed === 'number' &&
+      Number.isFinite(parsed.baseElapsed) &&
+      parsed.baseElapsed >= 0
+        ? Math.floor(parsed.baseElapsed)
+        : 0;
+    const laps: LapSplit[] = Array.isArray(parsed.laps)
+      ? parsed.laps.filter(
+          (item): item is LapSplit =>
+            typeof item === 'object' &&
+            item !== null &&
+            typeof item.lapNumber === 'number' &&
+            typeof item.atSeconds === 'number',
+        )
+      : [];
+
+    if (
+      parsed.isRunning &&
+      typeof parsed.runStartedAt === 'number' &&
+      Number.isFinite(parsed.runStartedAt)
+    ) {
+      const delta = Math.max(0, Math.floor((Date.now() - parsed.runStartedAt) / 1000));
+      const liveTotal = baseElapsed + delta;
+
+      if (targetSeconds !== null && liveTotal >= targetSeconds) {
+        return {
+          viewMode,
+          sessionTitle,
+          isRunning: false,
+          elapsedSeconds: targetSeconds,
+          baseElapsed: targetSeconds,
+          runStartedAt: null,
+          targetSeconds,
+          laps,
+        };
+      }
+
+      return {
+        viewMode,
+        sessionTitle,
+        isRunning: true,
+        elapsedSeconds: liveTotal,
+        baseElapsed,
+        runStartedAt: parsed.runStartedAt,
+        targetSeconds,
+        laps,
+      };
+    }
+
+    const clampedPaused =
+      targetSeconds !== null ? Math.min(targetSeconds, baseElapsed) : baseElapsed;
+
+    return {
+      viewMode,
+      sessionTitle,
+      isRunning: false,
+      elapsedSeconds: clampedPaused,
+      baseElapsed: clampedPaused,
+      runStartedAt: null,
+      targetSeconds,
+      laps,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 export interface FocusTimerState {
   viewMode: ClockViewMode;
   setViewMode: (mode: ClockViewMode) => void;
@@ -56,13 +174,12 @@ export interface FocusTimerState {
   targetSeconds: number | null;
   displaySeconds: number;
   isCompleted: boolean;
+  completionNotice: string | null;
+  dismissCompletionNotice: () => void;
   sessionTitle: string;
   setSessionTitle: (title: string) => void;
   laps: LapSplit[];
   soundPreset: TimerSoundPreset;
-  isOverlayOpen: boolean;
-  setIsOverlayOpen: (open: boolean) => void;
-  toggleOverlay: () => void;
   toggleRunning: () => void;
   selectPreset: (minutes: number | null) => void;
   applyCustomDuration: (totalSeconds: number) => boolean;
@@ -74,17 +191,24 @@ export interface FocusTimerState {
 }
 
 /**
- * Lifted timer & stopwatch state hook anchored to `Date.now()` timestamps so active
- * focus timers stay accurate across tab switches, background throttling, and external pop-outs.
+ * Lifted timer & stopwatch state hook anchored to `Date.now()` timestamps and
+ * auto-saved to `localStorage` so active or paused timers survive tab switches,
+ * browser reloads, and app restarts.
  */
 export function useFocusTimer(): FocusTimerState {
-  const [viewMode, setViewMode] = useState<ClockViewMode>('clock');
-  const [sessionTitle, setSessionTitle] = useState<string>('Study');
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const [targetSeconds, setTargetSeconds] = useState<number | null>(null);
-  const [laps, setLaps] = useState<LapSplit[]>([]);
-  const [isOverlayOpen, setIsOverlayOpen] = useState<boolean>(false);
+  const initialRef = useRef<InitialTimerSnapshot | null>(null);
+  if (initialRef.current === null) {
+    initialRef.current = loadInitialTimerSnapshot();
+  }
+  const initial = initialRef.current;
+
+  const [viewMode, setViewMode] = useState<ClockViewMode>(initial.viewMode);
+  const [sessionTitle, setSessionTitle] = useState<string>(initial.sessionTitle);
+  const [isRunning, setIsRunning] = useState<boolean>(initial.isRunning);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(initial.elapsedSeconds);
+  const [targetSeconds, setTargetSeconds] = useState<number | null>(initial.targetSeconds);
+  const [laps, setLaps] = useState<LapSplit[]>(initial.laps);
+  const [completionNotice, setCompletionNotice] = useState<string | null>(null);
 
   const [soundPreset, setSoundPreset] = useState<TimerSoundPreset>(() => {
     const saved = localStorage.getItem(SOUND_STORAGE_KEY);
@@ -109,8 +233,46 @@ export function useFocusTimer(): FocusTimerState {
   targetSecondsRef.current = targetSeconds;
 
   // Timestamp-anchored counters prevent drift if the browser throttles background tabs
-  const baseElapsedRef = useRef<number>(0);
-  const runStartedAtRef = useRef<number | null>(null);
+  const baseElapsedRef = useRef<number>(initial.baseElapsed);
+  const runStartedAtRef = useRef<number | null>(initial.runStartedAt);
+
+  const persistCurrentState = useCallback(
+    (overrides?: Partial<PersistedTimerState>) => {
+      try {
+        const payload: PersistedTimerState = {
+          viewMode,
+          sessionTitle,
+          isRunning,
+          baseElapsed: baseElapsedRef.current,
+          runStartedAt: runStartedAtRef.current,
+          targetSeconds,
+          laps,
+          ...overrides,
+        };
+        localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(payload));
+      } catch {
+        // Ignore storage quota / private-mode errors
+      }
+    },
+    [viewMode, sessionTitle, isRunning, targetSeconds, laps],
+  );
+
+  // Auto-save whenever timer state changes and right before page unload/quit
+  useEffect(() => {
+    persistCurrentState();
+  }, [persistCurrentState, elapsedSeconds]);
+
+  useEffect(() => {
+    function handleQuitSave() {
+      persistCurrentState();
+    }
+    window.addEventListener('pagehide', handleQuitSave);
+    window.addEventListener('beforeunload', handleQuitSave);
+    return () => {
+      window.removeEventListener('pagehide', handleQuitSave);
+      window.removeEventListener('beforeunload', handleQuitSave);
+    };
+  }, [persistCurrentState]);
 
   const computeLiveElapsed = useCallback((): number => {
     if (runStartedAtRef.current === null) {
@@ -147,16 +309,30 @@ export function useFocusTimer(): FocusTimerState {
       baseElapsedRef.current = targetSeconds;
       runStartedAtRef.current = null;
       setIsRunning(false);
+
+      const label = sessionTitleRef.current.trim() || 'Focus';
+      const durationText = formatDurationBadge(targetSeconds);
+      setCompletionNotice(`${label} (${durationText}) complete!`);
+
       playTimerAlarm(soundPresetRef.current, 'alarm');
-      void sendOsNotification('PicoTask // Timer Complete!', {
-        body: `Your ${sessionTitleRef.current.trim() || 'Focus'} session finished!`,
+      void sendOsNotification(`PicoTask // ${label} Complete!`, {
+        body: `Finished ${durationText} focus session. Tap to save or start another.`,
         tag: 'pico-timer-complete',
+        requireInteraction: true,
+        renotify: true,
+        vibrate: [180, 90, 180],
       });
     }
   }, [isRunning, targetSeconds, elapsedSeconds]);
 
+  const dismissCompletionNotice = useCallback(() => {
+    stopTimerAlarm();
+    setCompletionNotice(null);
+  }, []);
+
   const toggleRunning = useCallback(() => {
     playUiBlip(soundPresetRef.current);
+    setCompletionNotice(null);
 
     if (isRunning) {
       const live = computeLiveElapsed();
@@ -185,6 +361,7 @@ export function useFocusTimer(): FocusTimerState {
 
   const selectPreset = useCallback((minutes: number | null) => {
     stopTimerAlarm();
+    setCompletionNotice(null);
     baseElapsedRef.current = 0;
     runStartedAtRef.current = null;
     setIsRunning(false);
@@ -196,6 +373,7 @@ export function useFocusTimer(): FocusTimerState {
   const applyCustomDuration = useCallback((totalSeconds: number): boolean => {
     if (totalSeconds <= 0) return false;
     stopTimerAlarm();
+    setCompletionNotice(null);
     baseElapsedRef.current = 0;
     runStartedAtRef.current = null;
     setIsRunning(false);
@@ -224,6 +402,7 @@ export function useFocusTimer(): FocusTimerState {
 
   const resetTimer = useCallback(() => {
     stopTimerAlarm();
+    setCompletionNotice(null);
     baseElapsedRef.current = 0;
     runStartedAtRef.current = null;
     setIsRunning(false);
@@ -233,6 +412,7 @@ export function useFocusTimer(): FocusTimerState {
 
   const saveSession = useCallback(async (): Promise<boolean> => {
     stopTimerAlarm();
+    setCompletionNotice(null);
     const live = isRunning ? computeLiveElapsed() : elapsedSeconds;
     if (live <= 0) return false;
 
@@ -252,11 +432,6 @@ export function useFocusTimer(): FocusTimerState {
     return true;
   }, [isRunning, elapsedSeconds, targetSeconds, laps.length, computeLiveElapsed]);
 
-  const toggleOverlay = useCallback(() => {
-    playUiBlip(soundPresetRef.current);
-    setIsOverlayOpen((prev) => !prev);
-  }, []);
-
   const displaySeconds =
     targetSeconds !== null
       ? Math.max(0, targetSeconds - elapsedSeconds)
@@ -273,13 +448,12 @@ export function useFocusTimer(): FocusTimerState {
     targetSeconds,
     displaySeconds,
     isCompleted,
+    completionNotice,
+    dismissCompletionNotice,
     sessionTitle,
     setSessionTitle,
     laps,
     soundPreset,
-    isOverlayOpen,
-    setIsOverlayOpen,
-    toggleOverlay,
     toggleRunning,
     selectPreset,
     applyCustomDuration,
