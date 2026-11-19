@@ -97,6 +97,7 @@ export default function SettingsModal({
   async function handleResetAccount() {
     try {
       await db.tasks.clear();
+      await db.schedules.clear();
       await db.sessions.clear();
       await db.transactions.clear();
       localStorage.clear();

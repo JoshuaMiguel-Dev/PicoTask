@@ -31,8 +31,8 @@ export default function AboutPage() {
           <p className="text-sm sm:text-base text-pico-navy leading-snug">
             <strong>PicoTask</strong> is an offline-first Progressive Web App designed
             to sit on your phone or desk while you study—combining deadline tracking,
-            a monthly planner, a focus timer, a virtual streak cat, and a Peso (`₱`)
-            budget log in one 8-bit console.
+            a monthly planner, a focus timer, a virtual streak cat, and a budget log
+            in one 8-bit console.
           </p>
         </div>
       </section>
@@ -63,8 +63,8 @@ export default function AboutPage() {
             </span>
             <strong className="text-pico-navy">Monthly Schedule Planner:</strong>
             <p className="text-pico-gray mt-1 text-sm">
-              See your entire month at a glance with color-coded task indicators on each day.
-              Tap any date to inspect its timeline or schedule a task into a specific time slot.
+              See your entire month at a glance with color-coded reminders and task indicators.
+              Tap any date to inspect its timeline or schedule one-time and repeating day reminders.
             </p>
           </div>
 

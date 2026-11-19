@@ -1,5 +1,10 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { NewTaskInput, Task, UpdateTaskInput } from '../types/task';
+import type {
+  CalendarSchedule,
+  NewScheduleInput,
+  UpdateScheduleInput,
+} from '../types/schedule';
 import type { FocusSession } from '../types/session';
 import type { FinanceEntry, NewFinanceEntryInput } from '../types/finance';
 import { recordActiveStreakDate } from '../utils/streakUtils';
@@ -13,6 +18,7 @@ import { recordActiveStreakDate } from '../utils/streakUtils';
  */
 class PicoTaskDB extends Dexie {
   tasks!: EntityTable<Task, 'id'>;
+  schedules!: EntityTable<CalendarSchedule, 'id'>;
   sessions!: EntityTable<FocusSession, 'id'>;
   transactions!: EntityTable<FinanceEntry, 'id'>;
 
@@ -36,6 +42,13 @@ class PicoTaskDB extends Dexie {
 
     this.version(4).stores({
       tasks: '++id, deadline, completed, createdAt, repeatGroupId',
+      sessions: '++id, completedAt',
+      transactions: '++id, type, category, date, createdAt',
+    });
+
+    this.version(5).stores({
+      tasks: '++id, deadline, completed, createdAt, repeatGroupId',
+      schedules: '++id, dateTime, createdAt, repeatGroupId',
       sessions: '++id, completedAt',
       transactions: '++id, type, category, date, createdAt',
     });
@@ -122,6 +135,77 @@ export async function deleteTask(id: number): Promise<void> {
  */
 export async function deleteTaskSeries(repeatGroupId: string): Promise<number> {
   return db.tasks.where('repeatGroupId').equals(repeatGroupId).delete();
+}
+
+/**
+ * Adds a single calendar schedule/reminder (separate from Tasks).
+ */
+export async function addSchedule(
+  input: NewScheduleInput,
+): Promise<number | undefined> {
+  return db.schedules.add({
+    title: input.title.trim(),
+    notes: input.notes.trim(),
+    dateTime: input.dateTime,
+    createdAt: new Date().toISOString(),
+    repeatRule: input.repeatRule,
+    repeatGroupId: input.repeatGroupId,
+    repeatLabel: input.repeatLabel,
+  });
+}
+
+/**
+ * Adds a batch of repeated calendar schedule reminders in a single transaction.
+ */
+export async function addRepeatedSchedules(
+  inputs: NewScheduleInput[],
+): Promise<void> {
+  if (inputs.length === 0) return;
+  const nowIso = new Date().toISOString();
+  await db.schedules.bulkAdd(
+    inputs.map((input) => ({
+      title: input.title.trim(),
+      notes: input.notes.trim(),
+      dateTime: input.dateTime,
+      createdAt: nowIso,
+      repeatRule: input.repeatRule,
+      repeatGroupId: input.repeatGroupId,
+      repeatLabel: input.repeatLabel,
+    })),
+  );
+}
+
+/**
+ * Updates an existing calendar schedule reminder.
+ */
+export async function updateSchedule(
+  id: number,
+  changes: UpdateScheduleInput,
+): Promise<number> {
+  const payload: Partial<CalendarSchedule> = { ...changes };
+  if (typeof payload.title === 'string') {
+    payload.title = payload.title.trim();
+  }
+  if (typeof payload.notes === 'string') {
+    payload.notes = payload.notes.trim();
+  }
+  return db.schedules.update(id, payload);
+}
+
+/**
+ * Deletes a single calendar schedule reminder by ID.
+ */
+export async function deleteSchedule(id: number): Promise<void> {
+  await db.schedules.delete(id);
+}
+
+/**
+ * Deletes every reminder occurrence in a repeating calendar schedule series.
+ */
+export async function deleteScheduleSeries(
+  repeatGroupId: string,
+): Promise<number> {
+  return db.schedules.where('repeatGroupId').equals(repeatGroupId).delete();
 }
 
 /**
