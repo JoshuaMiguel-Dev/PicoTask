@@ -81,6 +81,7 @@ export default function CalendarPage() {
   ]);
   const [repeatHorizon, setRepeatHorizon] = useState<RepeatHorizon>('1m');
   const [showRecurringList, setShowRecurringList] = useState(false);
+  const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const allTasks = useLiveQuery(
@@ -795,13 +796,35 @@ export default function CalendarPage() {
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => void handleDeleteSeries(series.groupId)}
-                    className="pixel-btn min-h-8 px-2.5 py-1 bg-pico-peach text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase shrink-0"
-                  >
-                    Remove
-                  </button>
+                  {confirmDeleteGroupId === series.groupId ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void handleDeleteSeries(series.groupId);
+                          setConfirmDeleteGroupId(null);
+                        }}
+                        className="pixel-btn min-h-8 px-2.5 py-1 bg-pico-red text-pico-cream font-heading text-[8px] uppercase"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteGroupId(null)}
+                        className="pixel-btn min-h-8 px-2 py-1 bg-pico-cream text-pico-navy font-heading text-[8px] uppercase"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteGroupId(series.groupId)}
+                      className="pixel-btn min-h-8 px-2.5 py-1 bg-pico-peach text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase shrink-0"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

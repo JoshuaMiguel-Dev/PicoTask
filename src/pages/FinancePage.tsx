@@ -93,6 +93,7 @@ export default function FinancePage() {
   const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const entries = useLiveQuery(
     () => db.transactions.orderBy('date').reverse().toArray(),
@@ -503,18 +504,43 @@ export default function FinancePage() {
                     />
                   </span>
 
-                  <button
-                    type="button"
-                    aria-label={`Delete ${item.category} entry of ${item.amount} pesos`}
-                    onClick={() => {
-                      if (item.id !== undefined) {
-                        void deleteFinanceEntry(item.id);
-                      }
-                    }}
-                    className="pixel-btn min-h-9 px-2 py-1 bg-pico-peach text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase"
-                  >
-                    X
-                  </button>
+                  {confirmDeleteId === item.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        aria-label={`Confirm deleting ${item.category} entry`}
+                        onClick={() => {
+                          if (item.id !== undefined) {
+                            void deleteFinanceEntry(item.id);
+                            setConfirmDeleteId(null);
+                          }
+                        }}
+                        className="pixel-btn min-h-9 px-2 py-1 bg-pico-red text-pico-cream font-heading text-[8px] uppercase"
+                      >
+                        Del?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="pixel-btn min-h-9 px-2 py-1 bg-pico-cream text-pico-navy font-heading text-[8px] uppercase"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`Delete ${item.category} entry of ${item.amount} pesos`}
+                      onClick={() => {
+                        if (item.id !== undefined) {
+                          setConfirmDeleteId(item.id);
+                        }
+                      }}
+                      className="pixel-btn min-h-9 px-2 py-1 bg-pico-peach text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase"
+                    >
+                      X
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

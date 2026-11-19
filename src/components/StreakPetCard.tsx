@@ -4,12 +4,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { calculateStreakSummary, type CatMood } from '../utils/streakUtils';
 import PixelCat, {
-  CAT_ACCESSORIES,
   CAT_ACCESSORY_STORAGE_KEY,
   CAT_VARIANTS,
   CAT_VARIANT_STORAGE_KEY,
   getSavedCatAccessory,
   getSavedCatVariant,
+  STARTER_ACCESSORIES,
+  WEEKLY_ACCESSORIES,
   type CatAccessory,
   type CatVariant,
 } from './PixelCat';
@@ -182,8 +183,18 @@ export default function StreakPetCard() {
                   variant={draftVariant}
                   accessory={draftAccessory}
                 />
-                <span className="mt-1 font-heading text-[9px] uppercase text-pico-navy">
-                  {(nameInput.trim() || 'MINGMING').toUpperCase()}
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="font-heading text-[9px] uppercase text-pico-navy">
+                    {(nameInput.trim() || 'MINGMING').toUpperCase()}
+                  </span>
+                  <span className="bg-pico-orange border border-pico-navy px-1 py-0.5 font-heading text-[7px] uppercase text-pico-navy">
+                    LV.{summary.level}
+                  </span>
+                </div>
+                <span className="mt-1 font-heading text-[7px] uppercase text-pico-gray">
+                  {summary.level >= 6
+                    ? 'MAX LEVEL // ALL WEEKLY COSMETICS UNLOCKED!'
+                    : `BEST STREAK: ${summary.bestStreakCount}D // ${summary.daysToNextLevel}D TO LV.${summary.level + 1}`}
                 </span>
               </div>
 
@@ -210,13 +221,13 @@ export default function StreakPetCard() {
                 </div>
               </div>
 
-              {/* 2. Cosmetic Accessory */}
+              {/* 2. Starter Cosmetics */}
               <div>
                 <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
-                  Cosmetic:
+                  Starter Cosmetics:
                 </span>
-                <div className="grid grid-cols-5 gap-1">
-                  {CAT_ACCESSORIES.map((acc) => (
+                <div className="grid grid-cols-4 gap-1">
+                  {STARTER_ACCESSORIES.map((acc) => (
                     <button
                       key={acc.id}
                       type="button"
@@ -230,6 +241,46 @@ export default function StreakPetCard() {
                       {acc.label}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* 3. Weekly Streak Level-Up Unlocks (5 Cosmetics) */}
+              <div>
+                <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
+                  Weekly Streak Unlocks:
+                </span>
+                <div className="grid grid-cols-5 gap-1">
+                  {WEEKLY_ACCESSORIES.map((acc) => {
+                    const isUnlocked = summary.bestStreakCount >= acc.unlockDays;
+                    const isPicked = draftAccessory === acc.id;
+                    return (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        disabled={!isUnlocked}
+                        onClick={() => {
+                          if (isUnlocked) setDraftAccessory(acc.id);
+                        }}
+                        title={
+                          isUnlocked
+                            ? `${acc.label} (Unlocked at ${acc.unlockDays}D)`
+                            : `Reach a ${acc.unlockDays}-day streak to unlock ${acc.label}`
+                        }
+                        className={`pixel-btn py-1 px-0.5 flex flex-col items-center justify-center font-heading text-[6px] sm:text-[7px] uppercase ${
+                          !isUnlocked
+                            ? 'bg-pico-cream/50 text-pico-gray opacity-60 cursor-not-allowed'
+                            : isPicked
+                              ? 'bg-pico-green text-pico-cream'
+                              : 'bg-pico-peach text-pico-navy'
+                        }`}
+                      >
+                        <span className="truncate max-w-full">{acc.label}</span>
+                        <span className="text-[6px] opacity-85">
+                          {isUnlocked ? '★' : `${acc.unlockDays}D`}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -296,8 +347,13 @@ export default function StreakPetCard() {
             </span>
           </div>
 
-          <div className="bg-pico-navy text-pico-cream px-2 py-0.5 font-heading text-[9px] uppercase tabular-nums">
-            Streak: {summary.streakCount}D
+          <div className="flex items-center gap-1.5">
+            <span className="bg-pico-orange border-2 border-pico-navy text-pico-navy px-1.5 py-0.5 font-heading text-[8px] uppercase tabular-nums">
+              LV.{summary.level}
+            </span>
+            <div className="bg-pico-navy text-pico-cream px-2 py-0.5 font-heading text-[9px] uppercase tabular-nums">
+              Streak: {summary.streakCount}D
+            </div>
           </div>
         </div>
 
@@ -350,7 +406,7 @@ export default function StreakPetCard() {
               <div className="flex-1 h-3 bg-pico-cream border-2 border-pico-navy p-0.5">
                 <div
                   className={`h-full transition-all duration-300 ${
-                    questDone ? 'w-full bg-pico-green' : 'w-1/6 bg-pico-orange'
+                    questDone ? 'w-full bg-pico-green' : 'w-0'
                   }`}
                 />
               </div>

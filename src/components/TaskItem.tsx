@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Task } from '../types/task';
 import { formatDeadlineDisplay, getTaskUrgency } from '../utils/dateUtils';
 
@@ -16,6 +17,7 @@ export default function TaskItem({
   onDelete,
   onDeleteSeries,
 }: TaskItemProps) {
+  const [confirmMode, setConfirmMode] = useState<'single' | 'series' | null>(null);
   const urgency = getTaskUrgency(task);
 
   // Left accent bar & badge colors driven by task urgency
@@ -110,30 +112,61 @@ export default function TaskItem({
 
         {/* Bottom Action Row: Edit, Delete & Optional Delete Series */}
         <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t-2 border-pico-navy/20">
-          <button
-            type="button"
-            onClick={() => onEdit(task)}
-            className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-cream text-pico-navy font-heading text-[9px] uppercase"
-          >
-            Edit
-          </button>
-          {task.repeatGroupId && onDeleteSeries && (
-            <button
-              type="button"
-              onClick={() => onDeleteSeries(task.repeatGroupId!)}
-              title="Delete all occurrences in this repeating schedule"
-              className="pixel-btn min-h-10 px-2.5 py-1.5 bg-pico-orange text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase"
-            >
-              Del Series
-            </button>
+          {confirmMode !== null ? (
+            <>
+              <span className="font-heading text-[8px] uppercase text-pico-red mr-auto">
+                {confirmMode === 'series' ? 'Delete whole series?' : 'Delete task?'}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmMode === 'series' && task.repeatGroupId && onDeleteSeries) {
+                    onDeleteSeries(task.repeatGroupId);
+                  } else {
+                    onDelete(task);
+                  }
+                  setConfirmMode(null);
+                }}
+                className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-red text-pico-cream font-heading text-[9px] uppercase"
+              >
+                Confirm
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmMode(null)}
+                className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-cream text-pico-navy font-heading text-[9px] uppercase"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => onEdit(task)}
+                className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-cream text-pico-navy font-heading text-[9px] uppercase"
+              >
+                Edit
+              </button>
+              {task.repeatGroupId && onDeleteSeries && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmMode('series')}
+                  title="Delete all occurrences in this repeating schedule"
+                  className="pixel-btn min-h-10 px-2.5 py-1.5 bg-pico-orange text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[8px] uppercase"
+                >
+                  Del Series
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setConfirmMode('single')}
+                className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-peach text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[9px] uppercase"
+              >
+                Del
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={() => onDelete(task)}
-            className="pixel-btn min-h-10 px-3 py-1.5 bg-pico-peach text-pico-navy hover:bg-pico-red hover:text-pico-cream font-heading text-[9px] uppercase"
-          >
-            Del
-          </button>
         </div>
       </div>
     </article>

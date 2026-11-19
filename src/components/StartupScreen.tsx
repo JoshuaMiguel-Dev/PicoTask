@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import PixelCat, {
-  CAT_ACCESSORIES,
   CAT_ACCESSORY_STORAGE_KEY,
   CAT_VARIANTS,
   CAT_VARIANT_STORAGE_KEY,
   getSavedCatAccessory,
   getSavedCatVariant,
+  STARTER_ACCESSORIES,
   type CatAccessory,
   type CatVariant,
 } from './PixelCat';
@@ -185,8 +185,8 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
               <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
                 2. Choose Cosmetic:
               </span>
-              <div className="grid grid-cols-5 gap-1">
-                {CAT_ACCESSORIES.map((acc) => (
+              <div className="grid grid-cols-4 gap-1">
+                {STARTER_ACCESSORIES.map((acc) => (
                   <button
                     key={acc.id}
                     type="button"

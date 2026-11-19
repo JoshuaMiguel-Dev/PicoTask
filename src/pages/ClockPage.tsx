@@ -59,7 +59,9 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
 
   // --- LOCAL UI DRAWER STATE ---
   const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<number | null>(null);
   const [isCustomOpen, setIsCustomOpen] = useState<boolean>(false);
+  const [customHourStr, setCustomHourStr] = useState<string>('00');
   const [customMinStr, setCustomMinStr] = useState<string>('20');
   const [customSecStr, setCustomSecStr] = useState<string>('00');
 
@@ -148,9 +150,10 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
 
   function handleApplyCustomTimer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const hrs = Math.max(0, Number.parseInt(customHourStr || '0', 10) || 0);
     const mins = Math.max(0, Number.parseInt(customMinStr || '0', 10) || 0);
     const secs = Math.max(0, Number.parseInt(customSecStr || '0', 10) || 0);
-    const total = mins * 60 + secs;
+    const total = hrs * 3600 + mins * 60 + secs;
     if (applyCustomDuration(total)) {
       setIsCustomOpen(false);
     }
@@ -509,7 +512,7 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
                     </button>
                   </div>
 
-                  {/* Collapsible Custom Timer Input Box */}
+                  {/* Collapsible Custom Timer Input Box (HRS : MIN : SEC) */}
                   {isCustomOpen && (
                     <form
                       onSubmit={handleApplyCustomTimer}
@@ -519,11 +522,26 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
                         <input
                           type="number"
                           min="0"
-                          max="999"
+                          max="99"
+                          value={customHourStr}
+                          onChange={(e) => setCustomHourStr(e.target.value)}
+                          aria-label="Custom hours"
+                          className="pixel-input w-14 px-1.5 py-1 text-base text-center text-pico-navy tabular-nums"
+                        />
+                        <span className="font-heading text-[8px] uppercase text-pico-navy">
+                          HRS
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
                           value={customMinStr}
                           onChange={(e) => setCustomMinStr(e.target.value)}
                           aria-label="Custom minutes"
-                          className="pixel-input w-16 px-2 py-1 text-base text-center text-pico-navy tabular-nums"
+                          className="pixel-input w-14 px-1.5 py-1 text-base text-center text-pico-navy tabular-nums"
                         />
                         <span className="font-heading text-[8px] uppercase text-pico-navy">
                           MIN
@@ -538,7 +556,7 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
                           value={customSecStr}
                           onChange={(e) => setCustomSecStr(e.target.value)}
                           aria-label="Custom seconds"
-                          className="pixel-input w-16 px-2 py-1 text-base text-center text-pico-navy tabular-nums"
+                          className="pixel-input w-14 px-1.5 py-1 text-base text-center text-pico-navy tabular-nums"
                         />
                         <span className="font-heading text-[8px] uppercase text-pico-navy">
                           SEC
@@ -703,17 +721,41 @@ export default function ClockPage({ timer, external }: ClockPageProps) {
                         {format(parseISO(session.completedAt), 'MMM d')}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (session.id !== undefined) {
-                          void deleteFocusSession(session.id);
-                        }
-                      }}
-                      className="pixel-btn px-2 py-1 bg-pico-peach text-pico-navy font-heading text-[8px] uppercase"
-                    >
-                      X
-                    </button>
+                    {confirmDeleteSessionId === session.id ? (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (session.id !== undefined) {
+                              void deleteFocusSession(session.id);
+                              setConfirmDeleteSessionId(null);
+                            }
+                          }}
+                          className="pixel-btn px-2 py-1 bg-pico-red text-[#FFF1E8] font-heading text-[8px] uppercase"
+                        >
+                          Del?
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteSessionId(null)}
+                          className="pixel-btn px-2 py-1 bg-pico-cream text-pico-navy font-heading text-[8px] uppercase"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (session.id !== undefined) {
+                            setConfirmDeleteSessionId(session.id);
+                          }
+                        }}
+                        className="pixel-btn px-2 py-1 bg-pico-peach text-pico-navy font-heading text-[8px] uppercase"
+                      >
+                        X
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
