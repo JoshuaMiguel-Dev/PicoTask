@@ -197,11 +197,12 @@ export default function App() {
           </aside>
         )}
 
-        {/* Global In-App Deadline Reminder Banner */}
+        {/* Global In-App Deadline & Schedule Reminder Banner */}
         <div className="shrink-0">
           <DeadlineBanner
             now={now}
             onViewTasks={() => setActiveTab('tasks')}
+            onViewCalendar={() => setActiveTab('calendar')}
           />
         </div>
 
