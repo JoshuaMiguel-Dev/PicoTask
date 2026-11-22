@@ -1,11 +1,11 @@
 import PixelCat, {
-  getSavedCatAccessory,
+  getSavedCatAccessories,
   getSavedCatVariant,
 } from '../components/PixelCat';
 
 export default function AboutPage() {
   const variant = getSavedCatVariant();
-  const accessory = getSavedCatAccessory();
+  const accessories = getSavedCatAccessories();
 
   return (
     <div className="space-y-4">
@@ -17,7 +17,7 @@ export default function AboutPage() {
             size="md"
             isPetted
             variant={variant}
-            accessory={accessory}
+            accessories={accessories}
           />
         </div>
 

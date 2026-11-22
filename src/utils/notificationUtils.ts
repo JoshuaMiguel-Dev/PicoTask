@@ -101,13 +101,17 @@ export async function sendOsNotification(
   try {
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.getRegistration();
-      if (registration && 'showNotification' in registration) {
-        await registration.showNotification(title, swOptions);
-        return true;
+      if (registration?.active && 'showNotification' in registration) {
+        try {
+          await registration.showNotification(title, swOptions);
+          return true;
+        } catch {
+          // Fall through to window.Notification fallback if SW showNotification fails
+        }
       }
     }
 
-    // Fallback for desktop browser tabs when Service Worker is not yet registered in dev mode
+    // Fallback for desktop browser tabs or when Service Worker is not active yet
     const desktopOptions: NotificationOptions = {
       body: swOptions.body,
       tag: swOptions.tag,

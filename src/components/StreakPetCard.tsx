@@ -4,12 +4,13 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { calculateStreakSummary, type CatMood } from '../utils/streakUtils';
 import PixelCat, {
-  CAT_ACCESSORY_STORAGE_KEY,
   CAT_VARIANTS,
   CAT_VARIANT_STORAGE_KEY,
-  getSavedCatAccessory,
+  getSavedCatAccessories,
   getSavedCatVariant,
+  saveCatAccessories,
   STARTER_ACCESSORIES,
+  toggleAccessorySelection,
   WEEKLY_ACCESSORIES,
   type CatAccessory,
   type CatVariant,
@@ -47,16 +48,16 @@ export default function StreakPetCard() {
   const [catVariant, setCatVariant] = useState<CatVariant>(() =>
     getSavedCatVariant(),
   );
-  const [catAccessory, setCatAccessory] = useState<CatAccessory>(() =>
-    getSavedCatAccessory(),
+  const [catAccessories, setCatAccessories] = useState<CatAccessory[]>(() =>
+    getSavedCatAccessories(),
   );
 
   // Wardrobe & Rename Modal State for Existing Users
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [nameInput, setNameInput] = useState(catName);
   const [draftVariant, setDraftVariant] = useState<CatVariant>(catVariant);
-  const [draftAccessory, setDraftAccessory] =
-    useState<CatAccessory>(catAccessory);
+  const [draftAccessories, setDraftAccessories] =
+    useState<CatAccessory[]>(catAccessories);
 
   const allTasks = useLiveQuery(() => db.tasks.toArray(), []);
   const summary = calculateStreakSummary(allTasks ?? []);
@@ -126,7 +127,7 @@ export default function StreakPetCard() {
   function openCustomizeModal() {
     setNameInput(catName);
     setDraftVariant(catVariant);
-    setDraftAccessory(catAccessory);
+    setDraftAccessories(catAccessories);
     setIsCustomizing(true);
   }
 
@@ -135,11 +136,11 @@ export default function StreakPetCard() {
     const cleaned = (nameInput.trim() || 'MINGMING').toUpperCase();
     localStorage.setItem(CAT_NAME_STORAGE_KEY, cleaned);
     localStorage.setItem(CAT_VARIANT_STORAGE_KEY, draftVariant);
-    localStorage.setItem(CAT_ACCESSORY_STORAGE_KEY, draftAccessory);
+    saveCatAccessories(draftAccessories);
 
     setCatName(cleaned);
     setCatVariant(draftVariant);
-    setCatAccessory(draftAccessory);
+    setCatAccessories(draftAccessories);
     setIsCustomizing(false);
   }
 
@@ -181,7 +182,7 @@ export default function StreakPetCard() {
                   size="lg"
                   isPetted
                   variant={draftVariant}
-                  accessory={draftAccessory}
+                  accessories={draftAccessories}
                 />
                 <div className="mt-1 flex items-center gap-1.5">
                   <span className="font-heading text-[9px] uppercase text-pico-navy">
@@ -221,26 +222,41 @@ export default function StreakPetCard() {
                 </div>
               </div>
 
-              {/* 2. Starter Cosmetics */}
+              {/* 2. Cosmetics (Wear up to 2 at once) */}
               <div>
-                <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
-                  Starter Cosmetics:
-                </span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-heading text-[8px] uppercase text-pico-navy">
+                    Cosmetics:
+                  </span>
+                  <span className="font-heading text-[7px] uppercase text-pico-gray">
+                    Equipped {draftAccessories.length}/2
+                  </span>
+                </div>
                 <div className="grid grid-cols-4 gap-1">
-                  {STARTER_ACCESSORIES.map((acc) => (
-                    <button
-                      key={acc.id}
-                      type="button"
-                      onClick={() => setDraftAccessory(acc.id)}
-                      className={`pixel-btn py-1.5 font-heading text-[7px] sm:text-[8px] uppercase ${
-                        draftAccessory === acc.id
-                          ? 'bg-pico-green text-pico-cream'
-                          : 'bg-pico-cream text-pico-navy'
-                      }`}
-                    >
-                      {acc.label}
-                    </button>
-                  ))}
+                  {STARTER_ACCESSORIES.map((acc) => {
+                    const isPicked =
+                      acc.id === 'none'
+                        ? draftAccessories.length === 0
+                        : draftAccessories.includes(acc.id);
+                    return (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        onClick={() =>
+                          setDraftAccessories((prev) =>
+                            toggleAccessorySelection(prev, acc.id),
+                          )
+                        }
+                        className={`pixel-btn py-1.5 font-heading text-[7px] sm:text-[8px] uppercase ${
+                          isPicked
+                            ? 'bg-pico-green text-pico-cream'
+                            : 'bg-pico-cream text-pico-navy'
+                        }`}
+                      >
+                        {acc.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -252,14 +268,18 @@ export default function StreakPetCard() {
                 <div className="grid grid-cols-5 gap-1">
                   {WEEKLY_ACCESSORIES.map((acc) => {
                     const isUnlocked = summary.bestStreakCount >= acc.unlockDays;
-                    const isPicked = draftAccessory === acc.id;
+                    const isPicked = draftAccessories.includes(acc.id);
                     return (
                       <button
                         key={acc.id}
                         type="button"
                         disabled={!isUnlocked}
                         onClick={() => {
-                          if (isUnlocked) setDraftAccessory(acc.id);
+                          if (isUnlocked) {
+                            setDraftAccessories((prev) =>
+                              toggleAccessorySelection(prev, acc.id),
+                            );
+                          }
                         }}
                         title={
                           isUnlocked
@@ -373,7 +393,7 @@ export default function StreakPetCard() {
               isSuperCombo={isSuperCombo}
               secretPhase={secretPhase}
               variant={catVariant}
-              accessory={catAccessory}
+              accessories={catAccessories}
             />
             <span className="mt-1 font-heading text-[7px] uppercase text-pico-gray group-hover:text-pico-navy">
               [Pet]

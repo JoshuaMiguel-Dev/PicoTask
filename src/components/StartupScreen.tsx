@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import PixelCat, {
-  CAT_ACCESSORY_STORAGE_KEY,
   CAT_VARIANTS,
   CAT_VARIANT_STORAGE_KEY,
-  getSavedCatAccessory,
+  getSavedCatAccessories,
   getSavedCatVariant,
+  saveCatAccessories,
   STARTER_ACCESSORIES,
+  toggleAccessorySelection,
   type CatAccessory,
   type CatVariant,
 } from './PixelCat';
@@ -34,8 +35,8 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
   const [catVariant, setCatVariant] = useState<CatVariant>(() =>
     getSavedCatVariant(),
   );
-  const [catAccessory, setCatAccessory] = useState<CatAccessory>(() =>
-    getSavedCatAccessory(),
+  const [catAccessories, setCatAccessories] = useState<CatAccessory[]>(() =>
+    getSavedCatAccessories(),
   );
 
   const [isBooting, setIsBooting] = useState<boolean>(isReturningUser);
@@ -82,7 +83,7 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
     const finalCatName = (catName.trim() || 'MINGMING').toUpperCase();
     localStorage.setItem(CAT_NAME_STORAGE_KEY, finalCatName);
     localStorage.setItem(CAT_VARIANT_STORAGE_KEY, catVariant);
-    localStorage.setItem(CAT_ACCESSORY_STORAGE_KEY, catAccessory);
+    saveCatAccessories(catAccessories);
     localStorage.setItem(ONBOARDED_KEY, 'true');
     setCatName(finalCatName);
     setIsBooting(true);
@@ -122,7 +123,7 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
             size="lg"
             isPetted
             variant={catVariant}
-            accessory={catAccessory}
+            accessories={catAccessories}
           />
 
           {isBooting ? (
@@ -180,26 +181,36 @@ export default function StartupScreen({ onFinish }: StartupScreenProps) {
               </div>
             </div>
 
-            {/* 2. Cosmetic Accessory Selector */}
+            {/* 2. Cosmetic Accessory Selector (Up to 2) */}
             <div>
               <span className="block font-heading text-[8px] uppercase text-pico-navy mb-1">
-                2. Choose Cosmetic:
+                2. Choose Cosmetics ({catAccessories.length}/2):
               </span>
               <div className="grid grid-cols-4 gap-1">
-                {STARTER_ACCESSORIES.map((acc) => (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    onClick={() => setCatAccessory(acc.id)}
-                    className={`pixel-btn py-1.5 font-heading text-[7px] sm:text-[8px] uppercase ${
-                      catAccessory === acc.id
-                        ? 'bg-pico-green text-pico-cream'
-                        : 'bg-pico-cream text-pico-navy'
-                    }`}
-                  >
-                    {acc.label}
-                  </button>
-                ))}
+                {STARTER_ACCESSORIES.map((acc) => {
+                  const isPicked =
+                    acc.id === 'none'
+                      ? catAccessories.length === 0
+                      : catAccessories.includes(acc.id);
+                  return (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() =>
+                        setCatAccessories((prev) =>
+                          toggleAccessorySelection(prev, acc.id),
+                        )
+                      }
+                      className={`pixel-btn py-1.5 font-heading text-[7px] sm:text-[8px] uppercase ${
+                        isPicked
+                          ? 'bg-pico-green text-pico-cream'
+                          : 'bg-pico-cream text-pico-navy'
+                      }`}
+                    >
+                      {acc.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
